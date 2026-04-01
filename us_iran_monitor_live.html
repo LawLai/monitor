@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>US-Iran War Game Theory Monitor — Day 34 | Apr 2, 2026</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+* { box-sizing:border-box; margin:0; padding:0; }
+body { background:#080c0a; color:#d4d4d4; font-family:'SF Mono','Menlo','Courier New',monospace; min-height:100vh; }
+::-webkit-scrollbar{width:3px;height:3px}::-webkit-scrollbar-thumb{background:rgba(0,255,136,.12);border-radius:3px}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes flash{0%,100%{background:rgba(255,45,85,.08)}50%{background:rgba(255,45,85,.22)}}
+@keyframes scrollTicker{0%{transform:translateX(100%)}100%{transform:translateX(-100%)}}
+
+.live-dot{width:8px;height:8px;border-radius:50%;background:#ff2d55;box-shadow:0 0 12px #ff2d55;animation:pulse 1.5s infinite}
+
+.header{border-bottom:1px solid rgba(255,45,85,.15);padding:14px 20px;background:rgba(0,0,0,.65);position:sticky;top:0;z-index:100}
+.header-top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:12px}
+.brand-title{font-size:.78rem;font-weight:800;color:#ff2d55;letter-spacing:.18em}
+.brand-sub{font-size:.4rem;color:rgba(255,255,255,.2);letter-spacing:.2em;margin-top:2px}
+.clock{font-size:.58rem;color:#00ff88;font-weight:600}
+
+.ticker{background:rgba(0,0,0,.8);border-bottom:1px solid rgba(255,45,85,.2);padding:5px 0;overflow:hidden;white-space:nowrap}
+.ticker-inner{display:inline-flex;animation:scrollTicker 60s linear infinite;gap:0}
+.ticker-item{font-size:.44rem;color:rgba(255,255,255,.65);padding:0 32px}
+.ticker-sep{color:#ff2d55;margin:0 4px}
+
+.stats-row{display:flex;gap:5px;margin-top:12px;flex-wrap:wrap}
+.stat{flex:1 1 80px;border-radius:6px;padding:8px 10px;min-width:78px;position:relative;background:rgba(255,255,255,.03)}
+.stat-label{font-size:.36rem;color:rgba(255,255,255,.3);letter-spacing:.14em;margin-bottom:2px}
+.stat-val{font-size:.82rem;font-weight:800}
+.stat-delta{font-size:.42rem;margin-left:4px}
+.stat-badge{position:absolute;top:3px;right:5px;font-size:.3rem;font-weight:800;padding:1px 4px;border-radius:2px;letter-spacing:.08em}
+.badge-new{background:rgba(255,45,85,.2);color:#ff2d55}
+.badge-upd{background:rgba(255,214,10,.12);color:#ffd60a}
+
+.tabs{display:flex;border-bottom:1px solid rgba(255,255,255,.06);background:rgba(0,0,0,.4);overflow-x:auto}
+.tab{flex:1 0 auto;padding:10px 14px;background:none;border:none;border-bottom:2px solid transparent;color:rgba(255,255,255,.3);font-size:.48rem;letter-spacing:.14em;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;transition:all .2s}
+.tab.active{border-bottom-color:#ff2d55;color:#ff2d55}
+.tab:hover:not(.active){color:rgba(255,255,255,.5)}
+
+.content{padding:16px 20px;max-width:1100px;margin:0 auto;animation:fadeIn .3s ease}
+.section-title{font-size:.52rem;font-weight:700;letter-spacing:.14em;margin-bottom:10px}
+
+.alert-banner{padding:10px 14px;border-radius:7px;margin-bottom:12px;border:1px solid;animation:flash 2.5s infinite}
+.alert-tag{font-size:.38rem;font-weight:800;letter-spacing:.14em;padding:2px 6px;border-radius:3px;margin-right:8px}
+.alert-text{font-size:.5rem;line-height:1.6}
+
+.actor-tabs{display:flex;gap:5px;margin-bottom:16px;flex-wrap:wrap}
+.actor-tab{flex:1 1 110px;padding:9px 10px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:7px;cursor:pointer;font-family:inherit;text-align:left;transition:all .2s}
+.actor-tab-name{font-size:.58rem;font-weight:700;margin-bottom:2px}
+.actor-tab-tag{font-size:.36rem;color:rgba(255,255,255,.25);letter-spacing:.08em}
+
+.obj-row{margin-bottom:8px;padding:9px 11px;background:rgba(255,255,255,.025);border-radius:6px;border:1px solid rgba(255,255,255,.04)}
+.obj-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.obj-name{font-size:.56rem;color:rgba(255,255,255,.75)}
+.obj-meta{display:flex;gap:8px;align-items:center}
+.obj-status{font-size:.42rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.obj-weight{font-size:.5rem;font-weight:700}
+.bar-track{width:100%;height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;margin-bottom:4px}
+.bar-fill{height:100%;border-radius:2px;opacity:.65}
+.obj-info{font-size:.45rem;color:rgba(255,255,255,.35);line-height:1.5}
+.obj-update{font-size:.42rem;color:#ffd60a;margin-top:4px;padding:3px 7px;background:rgba(255,214,10,.05);border-radius:3px;border-left:2px solid rgba(255,214,10,.35);line-height:1.5}
+
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.sub-title{font-size:.46rem;font-weight:700;letter-spacing:.12em;margin-bottom:8px}
+.dec-row{margin-bottom:7px}
+.dec-header{display:flex;justify-content:space-between;margin-bottom:2px}
+.dec-label{font-size:.52rem;color:rgba(255,255,255,.5)}
+.dec-val{font-size:.58rem;font-weight:700}
+.dec-bar{height:5px;background:rgba(255,255,255,.05);border-radius:3px;overflow:hidden}
+.dec-fill{height:100%;border-radius:3px}
+
+.infl-row{padding:7px 9px;background:rgba(255,255,255,.02);border-radius:5px;border:1px solid rgba(255,255,255,.04);margin-bottom:4px}
+.infl-header{display:flex;justify-content:space-between}
+.infl-from{font-size:.54rem;color:rgba(255,255,255,.65);font-weight:600}
+.infl-dir{font-size:.46rem;font-weight:700}
+.infl-info{font-size:.44rem;color:rgba(255,255,255,.3);margin-top:2px}
+
+.us-infl-box{margin-top:14px;padding:12px;border-radius:7px}
+.us-infl-title{font-size:.48rem;font-weight:700;letter-spacing:.1em;margin-bottom:6px}
+.us-infl-ev{font-size:.46rem;color:rgba(255,255,255,.4);padding:2px 0}
+
+.lev-con{padding:10px;background:rgba(255,255,255,.02);border-radius:6px}
+.lev-con-title{font-size:.42rem;font-weight:700;letter-spacing:.12em;margin-bottom:4px}
+.lev-con-item{font-size:.48rem;color:rgba(255,255,255,.45);padding:1px 0}
+
+.flow-row{display:flex;align-items:flex-start;gap:8px;padding:7px 10px;border-radius:5px;margin-bottom:4px}
+.flow-from{font-size:.56rem;font-weight:700;min-width:72px}
+.flow-dots{display:flex;gap:2px;padding-top:3px}
+.flow-dot{width:5px;height:3px;border-radius:1px}
+.flow-to{font-size:.54rem;font-weight:600;min-width:35px;color:rgba(255,255,255,.55)}
+.flow-dir{font-size:.5rem;font-weight:600}
+.flow-info{font-size:.42rem;color:rgba(255,255,255,.3);margin-top:1px}
+.flow-str{font-size:.62rem;font-weight:800}
+
+.insight-box{margin-top:14px;padding:12px;background:rgba(0,255,136,.03);border:1px solid rgba(0,255,136,.1);border-radius:7px}
+.insight-title{font-size:.5rem;color:#00ff88;font-weight:700;letter-spacing:.12em;margin-bottom:6px}
+.insight-text{font-size:.54rem;color:rgba(255,255,255,.5);line-height:1.8}
+
+.matrix-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:440px}
+th,td{padding:8px 10px;text-align:center}
+th{border-bottom:1px solid rgba(255,255,255,.08);font-size:.46rem;font-weight:600}
+td{border:1px solid rgba(255,255,255,.05);font-size:.68rem;background:rgba(255,255,255,.02);position:relative}
+.nash-cell{background:rgba(0,255,136,.06)!important;border:1px solid rgba(0,255,136,.25)!important}
+.nash-tag{position:absolute;top:2px;right:4px;font-size:.34rem;color:#00ff88}
+.shift-cell{background:rgba(255,159,10,.04)!important;border:1px solid rgba(255,159,10,.2)!important}
+.shift-tag{position:absolute;top:2px;right:4px;font-size:.32rem;color:#ff9f0a}
+
+.mods-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:14px}
+.mod-card{background:rgba(255,255,255,.02);border-radius:7px;padding:10px}
+.mod-title{font-size:.56rem;font-weight:700;margin-bottom:6px}
+.mod-row{display:flex;justify-content:space-between;margin-bottom:2px}
+.mod-label{font-size:.44rem;color:rgba(255,255,255,.4)}
+.mod-val{font-size:.5rem;font-weight:700}
+
+.tree-node{margin-bottom:5px}
+.tree-parent{display:flex;align-items:center;gap:8px;padding:9px 12px;background:rgba(255,255,255,.04);border-radius:7px;cursor:pointer}
+.tree-caret{font-size:.46rem;transition:transform .2s;display:inline-block}
+.tree-caret.open{transform:rotate(90deg)}
+.tree-label{font-size:.66rem;font-weight:700;flex:1}
+.tree-note{font-size:.42rem;color:rgba(255,255,255,.3);max-width:200px;text-align:right}
+.tree-bar{width:55px;height:5px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden;margin-left:8px}
+.tree-bar-fill{height:100%;border-radius:3px}
+.tree-pct{font-size:.7rem;font-weight:800;min-width:36px;text-align:right}
+.tree-children{border-left:1px solid rgba(255,255,255,.06);margin-left:16px}
+.tree-child{display:flex;align-items:center;gap:8px;padding:6px 12px;margin-top:2px;background:rgba(255,255,255,.015);border:1px solid rgba(255,255,255,.04);border-radius:5px;margin-left:4px}
+.tree-child-label{font-size:.58rem;flex:1}
+.tree-child-note{font-size:.4rem;color:rgba(255,255,255,.25);max-width:160px;text-align:right}
+.tree-child-bar{width:45px;height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;margin-left:6px}
+.tree-child-pct{font-size:.62rem;font-weight:700;min-width:32px;text-align:right}
+
+.esc-de-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.esc-box{padding:12px;border-radius:7px}
+.esc-title{font-size:.48rem;font-weight:700;letter-spacing:.1em;margin-bottom:6px}
+.esc-item{font-size:.46rem;color:rgba(255,255,255,.45);padding:2px 0}
+.esc-item.hot{color:#ffd60a}
+
+.timeline-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:6px}
+.tl-filters{display:flex;gap:3px;flex-wrap:wrap}
+.tl-filter{padding:3px 8px;font-size:.4rem;letter-spacing:.06em;font-weight:600;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:3px;cursor:pointer;font-family:inherit;color:rgba(255,255,255,.35);transition:all .2s}
+.tl-filter.active{background:rgba(255,45,85,.15);border-color:rgba(255,45,85,.3);color:#ff2d55}
+.chart-wrap{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:7px;padding:14px;position:relative;height:300px}
+.tl-log{margin-top:14px;max-height:220px;overflow-y:auto}
+.tl-entry{display:flex;gap:8px;padding:5px 9px;margin-bottom:2px;background:rgba(255,255,255,.015);border-radius:4px;border:1px solid transparent}
+.tl-entry.latest{background:rgba(255,45,85,.06);border-color:rgba(255,45,85,.2)}
+.tl-entry.hot{background:rgba(255,214,10,.04);border-color:rgba(255,214,10,.15)}
+.tl-date{min-width:44px}
+.tl-date-main{font-size:.52rem;font-weight:600}
+.tl-date-day{font-size:.36rem;color:rgba(255,255,255,.2)}
+.tl-ev{font-size:.48rem;color:rgba(255,255,255,.45);flex:1;line-height:1.4}
+.tl-nums{display:flex;gap:5px;flex-shrink:0;align-items:center}
+.tl-cf{font-size:.42rem;color:#30d158}
+.tl-es{font-size:.42rem;color:#ff2d55}
+.new-badge{font-size:.3rem;font-weight:800;color:#ffd60a;background:rgba(255,214,10,.15);padding:1px 4px;border-radius:2px;flex-shrink:0;align-self:center}
+
+.net-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.net-card{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:7px;padding:12px}
+.net-actor{font-size:.6rem;color:rgba(255,255,255,.8);font-weight:700;margin-bottom:4px}
+.net-result{font-size:.52rem;font-weight:700;margin-bottom:4px}
+.net-detail{font-size:.46rem;color:rgba(255,255,255,.4);line-height:1.5}
+
+@media(max-width:600px){
+  .two-col,.esc-de-grid,.net-grid{grid-template-columns:1fr}
+  .mods-grid{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div class="brand">
+      <div class="live-dot"></div>
+      <div>
+        <div class="brand-title">US-IRAN WAR GAME THEORY</div>
+        <div class="brand-sub">DAY 34 — APR 2, 2026 — LIVE DATA UPDATE — UAE ENTERS / TRUMP ADDRESSES NATION TONIGHT</div>
+      </div>
+    </div>
+    <div class="clock" id="clock">00:00:00</div>
+  </div>
+  <div class="stats-row">
+    <div class="stat" style="border:1px solid rgba(48,209,88,.12)">
+      <div class="stat-label">CEASEFIRE</div>
+      <span class="stat-val" style="color:#30d158">20%</span>
+      <span class="stat-delta" style="color:#ff453a">-4</span>
+      <span class="stat-badge badge-upd">UPD</span>
+    </div>
+    <div class="stat" style="border:1px solid rgba(255,45,85,.12)">
+      <div class="stat-label">ESCALATION</div>
+      <span class="stat-val" style="color:#ff2d55">68</span>
+      <span class="stat-delta" style="color:#ff453a">+10</span>
+      <span class="stat-badge badge-upd">UPD</span>
+    </div>
+    <div class="stat" style="border:1px solid rgba(255,159,10,.12)">
+      <div class="stat-label">GROUND WAR</div>
+      <span class="stat-val" style="color:#ff9f0a">38%</span>
+      <span class="stat-delta" style="color:#ff453a">+5</span>
+      <span class="stat-badge badge-upd">UPD</span>
+    </div>
+    <div class="stat" style="border:1px solid rgba(191,90,242,.12)">
+      <div class="stat-label">UAE COMBAT</div>
+      <span class="stat-val" style="color:#bf5af2">IMMINENT</span>
+      <span class="stat-delta" style="color:#ff453a">NEW</span>
+      <span class="stat-badge badge-new">NEW</span>
+    </div>
+    <div class="stat" style="border:1px solid rgba(100,210,255,.12)">
+      <div class="stat-label">CN/PK INIT</div>
+      <span class="stat-val" style="color:#64d2ff">ACTIVE</span>
+      <span class="stat-delta" style="color:#ff453a">NEW</span>
+      <span class="stat-badge badge-new">NEW</span>
+    </div>
+    <div class="stat" style="border:1px solid rgba(255,214,10,.12)">
+      <div class="stat-label">BRENT/BBL</div>
+      <span class="stat-val" style="color:#ffd60a">$107</span>
+      <span class="stat-delta" style="color:#ff453a">+45%↑war</span>
+      <span class="stat-badge badge-upd">UPD</span>
+    </div>
+  </div>
+</div>
+
+<div class="ticker">
+  <div class="ticker-inner">
+    <span class="ticker-item">🔴 IRGC fires 3 missile waves at Israel on Passover eve — 16 wounded incl. critical child <span class="ticker-sep">///</span></span>
+    <span class="ticker-item">🔴 WSJ EXCLUSIVE: UAE to join war — lobbying UN for "Hormuz Security Force" — first Gulf combatant <span class="ticker-sep">///</span></span>
+    <span class="ticker-item">🟡 Trump addresses nation TONIGHT 9PM ET — "important update on Iran" <span class="ticker-sep">///</span></span>
+    <span class="ticker-item">🟡 China + Pakistan launch joint 5-point ceasefire initiative — Beijing's biggest diplomatic move yet <span class="ticker-sep">///</span></span>
+    <span class="ticker-item">🔴 Iran fires ~50 missiles/drones at UAE on Tuesday — highest single-day GCC barrage <span class="ticker-sep">///</span></span>
+    <span class="ticker-item">🔴 QatarEnergy tanker "Aqua 1" struck by Iranian cruise missile 17nm north of Ras Laffan <span class="ticker-sep">///</span></span>
+    <span class="ticker-item">🟡 Trump: "Iran doesn't have to make a deal for me to end the war" — signals unilateral exit <span class="ticker-sep">///</span></span>
+    <span class="ticker-item">🟡 Trump Truth Social: if no deal, will obliterate ALL power plants, oil wells, Kharg Island, desalination plants <span class="ticker-sep">///</span></span>
+    <span class="ticker-item">🔴 Houthis + Hezbollah + Iran joint barrage on southern Israel — new coordinated Axis operation <span class="ticker-sep">///</span></span>
+    <span class="ticker-item">🟢 France in talks with 35 countries on post-war Hormuz demining mission <span class="ticker-sep">///</span></span>
+    <span class="ticker-item">🟢 2/3 of Americans want US to exit Iran war quickly (Reuters/Ipsos) <span class="ticker-sep">///</span></span>
+    <span class="ticker-item">🔴 Kuwait airport fuel depots ablaze after Iranian drone strike <span class="ticker-sep">///</span></span>
+    <span class="ticker-item">🟡 Bahrain circulates UNSC draft — Russia/China likely veto <span class="ticker-sep">///</span></span>
+  </div>
+</div>
+
+<div class="tabs" id="tabs">
+  <button class="tab active" data-tab="actors">ACTORS</button>
+  <button class="tab" data-tab="influence">INFLUENCE</button>
+  <button class="tab" data-tab="matrix">PAYOFF</button>
+  <button class="tab" data-tab="tree">PROB TREE</button>
+  <button class="tab" data-tab="timeline">TREND</button>
+</div>
+
+<div class="content" id="content"></div>
+
+<script>
+const ACTORS = [
+  { id:"us", name:"Trump / US", flag:"🇺🇸", color:"#5ac8fa", tag:"PRIMARY BELLIGERENT — EXIT SIGNALING",
+    objs:[
+      {n:"Dismantle nuclear program",w:30,s:"claimed",
+       info:"Trump: 'My sole function was making sure they don't have a nuclear weapon. They're not going to have one.' Declares this achieved.",
+       upd:null},
+      {n:"Reopen Strait of Hormuz",w:15,s:"abandoned",
+       info:"MAJOR SHIFT: Trump tells aides he may end war without reopening Hormuz. Says strait will 'automatically open' when US leaves. Shunting responsibility to allies: 'Go get your own oil.'",
+       upd:"TONIGHT'S ADDRESS: Will Trump formally drop Hormuz as a war objective?"},
+      {n:"Unilateral 'victory' declaration",w:25,s:"accelerating",
+       info:"Trump: 'Iran doesn't have to make a deal for me to end the war. It's a new regime.' Hints at declaring victory and withdrawing in 2–3 weeks without a formal deal. Address to nation tonight 9PM ET.",
+       upd:"9PM ET address — market pricing 40% chance Trump announces wind-down."},
+      {n:"Regime change",w:10,s:"redefined",
+       info:"'We leave because there's no reason for us to do this.' Counting Mojtaba's succession as regime change. Israel strongly disagrees.",
+       upd:null},
+      {n:"Minimize US casualties / cost",w:15,s:"urgent",
+       info:"$200B+ cost. 2/3 of Americans want quick exit (Reuters/Ipsos). Midterm pressure building. Rubio: NATO is a 'one-way street.'",
+       upd:"2/3 Americans now support exit — domestic pressure at war-high."},
+      {n:"Control economic fallout",w:5,s:"worsening",
+       info:"Brent at $107 — 45% above pre-war levels. Hormuz closure threatening global recession. Trump told UK to 'help itself.'",
+       upd:"Brent +45% from pre-war baseline. OECD cut Europe growth."},
+    ],
+    dec:{Withdraw:40,Negotiate:35,Escalate:25},
+    infl:[
+      {from:"Israel",dir:"Resist exit",str:9,info:"Passover attacks give Netanyahu political cover. 'Obliterated' language from Trump keeps Israel hawks appeased — briefly."},
+      {from:"UAE / Gulf",dir:"Hormuz force",str:8,info:"UAE entering war changes Trump's calculus. He can hand Hormuz mission to UAE-led coalition and declare victory."},
+      {from:"US Domestic",dir:"Exit now",str:8,info:"2/3 Americans want out. Gas prices, $200B cost, 13 KIA. Midterms loom. Rubio frustrated with NATO."},
+      {from:"China/Pakistan",dir:"Ceasefire path",str:6,info:"Joint 5-point initiative launched. Trump declined to oppose it. Gives diplomatic off-ramp if needed."},
+    ],
+    lev:["Tonight's national address as forcing function","Hormuz obliteration ultimatum (Truth Social)","Coalition hand-off to UAE","Sanctions snap-back"],
+    con:["Hormuz still closed (90% traffic down)","IRGC Passover barrage complicates exit narrative","Israel will not accept unilateral US withdrawal","$107 oil — can't call this 'victory'"],
+  },
+  { id:"ir", name:"Iran", flag:"🇮🇷", color:"#ff9f0a", tag:"DEFENDER — IRGC ESCALATING / DIPLOMACY PARALYZED",
+    objs:[
+      {n:"Regime survival",w:35,s:"contested",
+       info:"NYT: leadership severely paralyzed. Tehran ghost town. Pezeshkian and IRGC now openly operating on different tracks. Mojtaba's authority untested.",
+       upd:null},
+      {n:"Maintain military deterrent",w:20,s:"escalating",
+       info:"IRGC fired 3 waves at Israel on Passover eve. ~50 missiles/drones at UAE in a single day. Kuwait airport hit. Qatar tanker struck. Houthi/Hezbollah joint op. Military escalating while diplomacy stalls.",
+       upd:"Passover 3-wave barrage + Qatar tanker + Kuwait airport = IRGC taking control of war posture."},
+      {n:"Block Hormuz as leverage",w:25,s:"critical",
+       info:"Iran insisting on permanent oversight of Hormuz and formal toll system. Rejects any deal that doesn't recognize Iranian sovereignty. But UAE entering war directly threatens this card.",
+       upd:"UAE Hormuz Security Force plan directly threatens Iran's last major strategic card."},
+      {n:"Avoid capitulation",w:10,s:"fracturing",
+       info:"Pezeshkian told EU ready to end war with 'firm guarantees.' Araghchi publicly denies any talks. IRGC fires Passover barrages. Split is now fully public.",
+       upd:"Pezeshkian vs. IRGC split fully public. Who speaks for Iran?"},
+      {n:"Proxy axis — new joint ops",w:5,s:"expanding",
+       info:"Houthis, Hezbollah, and IRGC conducted first coordinated joint operation on Passover. New coordinated Axis posture emerging despite attrition.",
+       upd:"NEW: Yemen-Iran-Hezbollah joint barrage — first coordinated tri-force op."},
+      {n:"Iran 5-point counteroffer",w:5,s:"active",
+       info:"Conditions: end assassinations; security guarantees; reparations; end to hostilities; sovereignty over Hormuz. Pezeshkian told EU these are the real terms. IRGC adds: no talks with 'enemy.'",
+       upd:null},
+    ],
+    dec:{Escalate:45,Attrit:30,Negotiate:25},
+    infl:[
+      {from:"IRGC Hawks",dir:"Total escalate",str:9,info:"3-wave Passover barrage. ~50 missiles at UAE. Qatar tanker. Kuwait airport. Houthi joint op. IRGC is now driving the war unilaterally."},
+      {from:"Pezeshkian",dir:"Negotiate",str:4,info:"EU back-channel active. Ready to end with security guarantees. But IRGC actions are eroding his negotiating position hourly."},
+      {from:"China/Pakistan",dir:"Accept deal",str:6,info:"China is Iran's top oil buyer — serious economic leverage. 5-point plan gives face-saving exit. Iran cannot ignore Beijing."},
+    ],
+    lev:["Hormuz chokehold (90% traffic gone)","Passover timing escalation","Qatar/UAE tanker targeting","Tri-force proxy axis"],
+    con:["Military 90%+ degraded","UAE entering war adds new front","China pressure to de-escalate","Leadership paralysis — who decides?"],
+  },
+  { id:"il", name:"Israel", flag:"🇮🇱", color:"#30d158", tag:"CO-BELLIGERENT — 'COMPLETION PHASE'",
+    objs:[
+      {n:"Degrade Iran to 'completion'",w:30,s:"advancing",
+       info:"Israel declared 'completion phase' — shifting from leadership/nuclear targeting to systematic economic destruction. Isfahan steel plants. Ammonia factories. Power infrastructure.",
+       upd:"'Completion phase' means Israel wants weeks more war — conflicting directly with Trump's 2-3 week exit."},
+      {n:"Eliminate nuclear threat permanently",w:25,s:"partial",
+       info:"Netanyahu: 'uranium enrichment capacity destroyed.' IAEA: enrichment knowledge survives in undamaged underground sites. Debate over whether the goal is achieved.",
+       upd:null},
+      {n:"Block Trump's unilateral exit",w:20,s:"critical",
+       info:"Israel 'surprised' by Trump's exit signals. Passover attacks politically weaponized to demand continuation. Netanyahu leveraging civilian casualties. Influence on Trump now 9/10 — highest ever.",
+       upd:"Passover attacks = perfect political cover to demand weeks more war."},
+      {n:"Destroy Hezbollah infrastructure",w:15,s:"advancing",
+       info:"IDF past Litani River. 1,268+ killed in Lebanon. Quds Force Lebanon commander killed in Tehran. Ground op expanding.",
+       upd:null},
+      {n:"Netanyahu political survival",w:10,s:"boosted",
+       info:"War approval remains high. Criminal trial suspended. Passover attacks reinforce domestic support. But US exit threat is Netanyahu's biggest political crisis.",
+       upd:null},
+    ],
+    dec:{"Max war":70,"Accept deal":20,"Unilateral action":10},
+    infl:[
+      {from:"Trump exit signals",dir:"Extreme alarm",str:9,info:"Trump unilateral exit would leave Israel facing reconstituted Iran. Netanyahu making daily calls. Speeding up targeting to create facts on ground."},
+      {from:"Passover attacks",dir:"Domestic embolden",str:9,info:"16 wounded including critical child. 3-wave barrage. Makes ceasefire politically unsellable in Israel for weeks."},
+      {from:"UAE entering war",dir:"Welcome",str:7,info:"UAE combat role validates Israel's framing. Potentially delays Trump exit. Adds Arab legitimacy to 'defensive war' narrative."},
+    ],
+    lev:["9/10 influence on Trump (war-high)","Passover attacks as political cover","'Completion phase' tempo","Mossad + targeting intel"],
+    con:["Trump may exit unilaterally regardless","Multi-front fatigue (Iran+Lebanon+Houthi)","Munitions dependent on US","International isolation deepening"],
+    usInfl:{str:9,dir:"Prolong war / block exit — war-high influence",ev:["Daily Netanyahu–Trump calls","Passover civilian casualties used as political lever","'Completion phase' declared to justify weeks more war","Speeding up targeting before any ceasefire window","Took Araghchi/Ghalibaf off hit list per Pakistan request — shows limits of US influence on Israel"]},
+  },
+  { id:"gulf", name:"Gulf States (GCC)", flag:"🇦🇪", color:"#bf5af2", tag:"CROSSING THE RUBICON — UAE GOES COMBATANT",
+    objs:[
+      {n:"Force open Hormuz by any means",w:35,s:"active",
+       info:"WSJ EXCLUSIVE: UAE preparing to be first Gulf combatant. Lobbying UN UNSC for Hormuz Security Force. Deploying navy, F-16s. Jebel Ali port as staging base. Bahrain co-sponsoring UNSC resolution.",
+       upd:"GAME-CHANGER: UAE crossing from 'supportive' to 'combatant' — changes entire regional coalition math."},
+      {n:"Prevent Iran retaining Hormuz control",w:25,s:"urgent",
+       info:"Gulf states fear any diplomatic resolution gives Iran formal say over Hormuz. Want military action BEFORE any deal. UAE official: 'Iran thinks it's fighting for its existence and willing to bring global economy down with it.'",
+       upd:"UAE: Gulf states fear diplomatic solution gives Iran permanent Hormuz toll legitimacy."},
+      {n:"Destroy Iran's regional military capacity",w:20,s:"supporting",
+       info:"Saudi + UAE urging Trump to continue until Iran is 'disabled or toppled.' Saudi Arabia not yet committing military but watching UAE. 'Saudi Arabia closely watching' UAE move.",
+       upd:null},
+      {n:"Protect Gulf economic infrastructure",w:15,s:"failing",
+       info:"UAE: ~2,500 Iranian missiles/drones — more than any country including Israel. Dubai airport disrupted. Tourism collapsed. Property market hurt. Wave of furloughs. Emirates banning Iranian nationals.",
+       upd:"UAE absorbed more Iranian fire than Israel. Fundamental strategic shift triggered."},
+      {n:"Post-war Hormuz governance",w:5,s:"planning",
+       info:"Gulf states want Iran physically dislodged from Hormuz before any deal — not just a diplomatic promise. UAE wants US to occupy Abu Musa island (Iranian-held, UAE-claimed for 50 years).",
+       upd:"UAE wants US to occupy Abu Musa island — escalatory territorial demand."},
+    ],
+    dec:{"UAE joins war":65,"Support covertly":25,"Push ceasefire":10},
+    infl:[
+      {from:"Iranian attacks",dir:"Crossed red line",str:9,info:"~50 missiles/drones on UAE in one day. Qatar tanker struck. Kuwait airport ablaze. Bahrain, Saudi all hit. 'Patience not unlimited.'"},
+      {from:"Trump exit signals",dir:"Panic",str:8,info:"Trump 'Go get your own oil' — Gulf fears US withdrawal leaves them facing intact Iran. UAE entering war partly to KEEP US engaged and prevent unilateral exit."},
+      {from:"Economic damage",dir:"Force action",str:7,info:"Hormuz 90% closed. Tourism collapsed. Energy infra damaged. IEA: 40+ assets severely damaged. Dubai's 'oasis of peace' brand destroyed."},
+    ],
+    lev:["UAE navy + F-16s (US-supplied)","Jebel Ali deep-water port staging","UN UNSC resolution campaign (35 countries)","Oil export leverage + financial warfare"],
+    con:["Iran threatened to destroy critical infrastructure of any Gulf combatant","Russia/China UNSC veto likely","Saudi not yet committing","'Can't close Hormuz with a coalition' — Rep. Adam Smith warning"],
+    usInfl:{str:8,dir:"Keep US engaged + force Hormuz open by coalition",ev:["UAE Sultan al-Jaber briefed VP Vance in Washington","Described Iran actions as 'economic terrorism'","Bahrain UNSC resolution with US backing","France in talks with 35 countries on Hormuz mission","UAE would join even if UNSC resolution fails"]},
+  },
+];
+
+const TL = [
+  {d:"Feb 28",day:1,cf:3,es:85,gw:12,rg:8,ev:"Strikes begin — Khamenei killed",hot:false},
+  {d:"Mar 1",day:2,cf:4,es:92,gw:15,rg:12,ev:"Iran retaliates across region",hot:false},
+  {d:"Mar 3",day:4,cf:3,es:90,gw:18,rg:14,ev:"Israel invades Lebanon",hot:false},
+  {d:"Mar 7",day:8,cf:5,es:82,gw:22,rg:18,ev:"Mojtaba named Supreme Leader",hot:false},
+  {d:"Mar 10",day:11,cf:6,es:78,gw:25,rg:16,ev:"Iran air force destroyed; attacks down 90%",hot:false},
+  {d:"Mar 14",day:15,cf:7,es:75,gw:28,rg:15,ev:"Hormuz closed; Brent >$100",hot:false},
+  {d:"Mar 19",day:20,cf:10,es:68,gw:28,rg:13,ev:"USS Tripoli carrier group arrives",hot:false},
+  {d:"Mar 21",day:22,cf:6,es:74,gw:35,rg:18,ev:"US peace talks prep leaked to press",hot:false},
+  {d:"Mar 24",day:25,cf:14,es:65,gw:32,rg:16,ev:"15-point Witkoff plan sent via Pakistan",hot:false},
+  {d:"Mar 25",day:26,cf:12,es:70,gw:34,rg:17,ev:"Iran rejects plan as 'maximalist'; issues 5-point counter",hot:false},
+  {d:"Mar 26",day:27,cf:18,es:62,gw:30,rg:15,ev:"Trump pauses energy strikes until Apr 6",hot:false},
+  {d:"Mar 27",day:28,cf:20,es:58,gw:28,rg:14,ev:"Trump: 4–6 weeks to deal; 'talks going well'",hot:false},
+  {d:"Mar 29",day:30,cf:18,es:64,gw:35,rg:16,ev:"Pakistan 4-nation FM talks; Turkey messages role",hot:false},
+  {d:"Mar 30",day:31,cf:15,es:68,gw:38,rg:17,ev:"Iran parliament rejects talks; Gulf urges continuation",hot:false},
+  {d:"Mar 31",day:32,cf:18,es:65,gw:36,rg:16,ev:"Dow +1100pts; China-Pakistan joint ceasefire initiative",hot:true},
+  {d:"Apr 1",day:33,cf:24,es:58,gw:33,rg:14,ev:"Trump: '2–3 wks'; Pezeshkian signals readiness to EU",hot:true},
+  {d:"Apr 1 PM",day:34,cf:20,es:68,gw:38,rg:14,ev:"PASSOVER BARRAGE: 3-wave IRGC attack Israel + Qatar tanker + Kuwait airport — WSJ: UAE goes combatant — Trump 9PM address",hot:true},
+];
+
+const FLOWS = [
+  {f:"UAE",t:"US",s:9,dir:"Force open Hormuz — join war",c:"#bf5af2",i:"First Gulf combatant. Jebel Ali staging. F-16s. UNSC resolution drive. Sultan al-Jaber briefed Vance. GAME-CHANGER.",isNew:true},
+  {f:"Israel",t:"US",s:9,dir:"Block exit / max war",c:"#30d158",i:"Passover attacks give Netanyahu political cover. Daily calls. 'Completion phase' demands weeks more. Highest influence ever."},
+  {f:"Saudi/Gulf",t:"US",s:7,dir:"Continue + UAE coalition",c:"#bf5af2",i:"Want Iran 'disabled or toppled.' Saudi watching UAE. Bahrain UNSC resolution."},
+  {f:"US Domestic",t:"US",s:8,dir:"Exit now",c:"#5ac8fa",i:"2/3 Americans want out (Reuters/Ipsos). Gas $107. $200B cost. Midterms. Rubio NATO frustration."},
+  {f:"China/Pak",t:"Iran",s:7,dir:"Accept deal — 5-pt plan",c:"#64d2ff",i:"NEW: Beijing most concrete move yet. China buys 90% of Iranian oil — existential economic leverage. Trump did not oppose.",isNew:true},
+  {f:"IRGC",t:"Iran",s:9,dir:"Total escalation",c:"#ff453a",i:"3 Passover waves. ~50 UAE missiles. Qatar tanker. Kuwait airport. Houthi joint op. IRGC overriding Pezeshkian."},
+  {f:"Pezeshkian",t:"Iran",s:4,dir:"Negotiate — losing",c:"#30d158",i:"EU back-channel active. But IRGC actions systematically destroying his negotiating position."},
+  {f:"Iran",t:"Gulf",s:9,dir:"Unprecedented barrage",c:"#ff9f0a",i:"~50 missiles/drones on UAE alone in one day. Qatar tanker struck. Kuwait airport ablaze. All 6 GCC hit.",isNew:true},
+  {f:"Israel",t:"Iran",s:8,dir:"Completion phase",c:"#30d158",i:"Economic infrastructure now primary target. Isfahan steel, ammonia factories, power grids. Accelerating."},
+];
+
+const MATRIX = {
+  rows:["Escalate (ground/coalition)","Continue air + Hormuz force","Negotiate / US exit"],
+  cols:["Escalate (tri-force axis)","Attrit + Hormuz block","Accept deal / back-channel"],
+  vals:[[[-9,-8],[-5,-6],[4,-5]],[[-5,-4],[-2,-2],[5,-1]],[[-3,2],[-1,1],[3,3]]],
+  nash:[1,1],
+  shifting:[2,2],
+};
+
+const TREE = [
+  {l:"Trump unilateral exit (2–3 weeks)",p:32,c:"#5ac8fa",note:"War-high: address tonight may formalize",kids:[
+    {l:"Declares victory + withdraws",p:18,c:"#5ac8fa",note:"Hormuz 'will automatically open'"},
+    {l:"Hands Hormuz to UAE coalition",p:10,c:"#64d2ff",note:"UAE Security Force takes over"},
+    {l:"Exit collapses — Israel objects",p:4,c:"#ff9f0a",note:"Netanyahu blocks unilateral exit"},
+  ]},
+  {l:"War Continues (Apr–Jun)",p:36,c:"#ff453a",note:"Passover attacks reset clock",kids:[
+    {l:"Air campaign + UAE joins",p:18,c:"#ff6b6b",note:"New coalition dimension"},
+    {l:"Hormuz Security Force ops",p:12,c:"#ff9f0a",note:"UAE + international naval action"},
+    {l:"US ground / island seizure",p:6,c:"#ff2d55",note:"Abu Musa: escalatory UAE demand"},
+  ]},
+  {l:"Negotiated Ceasefire",p:20,c:"#30d158",note:"Down -8pts: Passover barrage damaged",kids:[
+    {l:"China/Pakistan plan accepted",p:10,c:"#30d158",note:"If Beijing presses Tehran hard"},
+    {l:"Pezeshkian back-channel deal",p:7,c:"#5ac8fa",note:"Security guarantees framework"},
+    {l:"Energy deadline forces deal (Apr 6)",p:3,c:"#64d2ff",note:"Trump obliteration ultimatum expires"},
+  ]},
+  {l:"Regime Collapse",p:7,c:"#bf5af2",note:"IRGC-Pezeshkian split widening"},
+  {l:"Nuclear / Black Swan",p:5,c:"#ffd60a",note:"IRGC threatens 18 US companies globally"},
+];
+
+const statusColor = s => {
+  if(!s) return "#888";
+  const x = s.toLowerCase();
+  if(x.includes("advanc")||x.includes("boost")||x.includes("active")||x.includes("accelerat")||x.includes("expand")) return "#30d158";
+  if(x.includes("partial")||x.includes("soften")||x.includes("plan")||x.includes("key")||x.includes("watching")) return "#5ac8fa";
+  if(x.includes("claim")||x.includes("leverag")||x.includes("support")||x.includes("urgent")||x.includes("imminent")) return "#ff9f0a";
+  if(x.includes("contest")||x.includes("fractur")||x.includes("widen")||x.includes("redefin")||x.includes("erod")||x.includes("stress")||x.includes("critical")||x.includes("down")||x.includes("losing")) return "#ffd60a";
+  return "#ff453a";
+};
+
+const dirColor = d => {
+  if(!d) return "#888";
+  const x = d.toLowerCase();
+  if(x.includes("escal")||x.includes("resist")||x.includes("harden")||x.includes("coerce")||x.includes("block")||x.includes("barrage")||x.includes("total")||x.includes("alarm")) return "#ff453a";
+  if(x.includes("de-")||x.includes("negot")||x.includes("ceasefire")||x.includes("exit")||x.includes("accept")||x.includes("deal")||x.includes("withdraw")) return "#30d158";
+  return "#ff9f0a";
+};
+
+let currentActor = 0;
+let currentTab = "actors";
+let treeOpen = {0:true,1:true,2:true};
+let tlFilter = "all";
+let chart = null;
+
+setInterval(() => {
+  const el = document.getElementById("clock");
+  if(el) el.textContent = new Date().toLocaleTimeString("en-US",{hour12:false});
+}, 1000);
+
+document.getElementById("tabs").addEventListener("click", e => {
+  const btn = e.target.closest(".tab");
+  if(!btn) return;
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  btn.classList.add("active");
+  currentTab = btn.dataset.tab;
+  render();
+});
+
+function render() {
+  const el = document.getElementById("content");
+  if(currentTab==="actors") el.innerHTML = renderActors();
+  else if(currentTab==="influence") el.innerHTML = renderInfluence();
+  else if(currentTab==="matrix") el.innerHTML = renderMatrix();
+  else if(currentTab==="tree") el.innerHTML = renderTree();
+  else if(currentTab==="timeline") { el.innerHTML = renderTimeline(); setTimeout(initChart,50); }
+  attachActorEvents();
+  attachTreeEvents();
+  attachTLFilterEvents();
+}
+
+function renderActors() {
+  const a = ACTORS[currentActor];
+
+  const alertHTML = currentActor===3 ? `
+    <div class="alert-banner" style="background:rgba(191,90,242,.06);border-color:rgba(191,90,242,.25);margin-bottom:12px">
+      <span class="alert-tag" style="background:rgba(191,90,242,.2);color:#bf5af2">WSJ EXCLUSIVE</span>
+      <span class="alert-text" style="color:rgba(255,255,255,.7)">UAE preparing to become the <strong style="color:#bf5af2">first Gulf state to enter combat</strong> — lobbying for UN "Hormuz Security Force" — deploying navy, F-16s, Jebel Ali port — Sultan al-Jaber briefed VP Vance directly. Iran responded with ~50 missiles/drones on UAE in one day.</span>
+    </div>` : currentActor===0 ? `
+    <div class="alert-banner" style="background:rgba(90,200,250,.05);border-color:rgba(90,200,250,.2);margin-bottom:12px">
+      <span class="alert-tag" style="background:rgba(90,200,250,.15);color:#5ac8fa">TONIGHT 9PM ET</span>
+      <span class="alert-text" style="color:rgba(255,255,255,.65)">Trump national address on Iran. Markets pricing 40% exit announcement. Truth Social ultimatum: obliterate ALL power plants, oil wells, Kharg Island if no deal by Apr 6. Simultaneously says Iran "doesn't have to make a deal."</span>
+    </div>` : currentActor===1 ? `
+    <div class="alert-banner" style="background:rgba(255,159,10,.05);border-color:rgba(255,159,10,.2);margin-bottom:12px">
+      <span class="alert-tag" style="background:rgba(255,45,85,.2);color:#ff2d55">PASSOVER BARRAGE</span>
+      <span class="alert-text" style="color:rgba(255,255,255,.65)">IRGC fired 3 missile waves at Israel in 1 hour on Passover eve. 16 wounded incl. critical child. Simultaneous: Kuwait airport fuel depot ablaze, Qatar QatarEnergy tanker struck, Houthi/Hezbollah joint op. IRGC now clearly overriding Pezeshkian's diplomatic track.</span>
+    </div>` : "";
+
+  const actorTabs = ACTORS.map((ac,i) => `
+    <button class="actor-tab" data-ai="${i}"
+      style="border-color:${i===currentActor?ac.color+'45':'rgba(255,255,255,.06)'};background:${i===currentActor?ac.color+'10':'rgba(255,255,255,.02)'}">
+      <div class="actor-tab-name" style="color:${i===currentActor?ac.color:'rgba(255,255,255,.5)'}">${ac.flag} ${ac.name}</div>
+      <div class="actor-tab-tag">${ac.tag}</div>
+    </button>`).join("");
+
+  const objs = a.objs.map(o => `
+    <div class="obj-row">
+      <div class="obj-header">
+        <span class="obj-name">${o.n}</span>
+        <div class="obj-meta">
+          <span class="obj-status" style="color:${statusColor(o.s)}">${o.s}</span>
+          <span class="obj-weight" style="color:${a.color}">${o.w}%</span>
+        </div>
+      </div>
+      <div class="bar-track"><div class="bar-fill" style="width:${o.w}%;background:${a.color}"></div></div>
+      <div class="obj-info">${o.info}</div>
+      ${o.upd?`<div class="obj-update">↑ ${o.upd}</div>`:''}
+    </div>`).join("");
+
+  const decs = Object.entries(a.dec).map(([k,v]) => {
+    const c = k.toLowerCase().includes("escal")||k.toLowerCase().includes("max")||k.toLowerCase().includes("total")||k.toLowerCase().includes("join")?"#ff453a":
+              k.toLowerCase().includes("exit")||k.toLowerCase().includes("withdra")||k.toLowerCase().includes("ceasefire")||k.toLowerCase().includes("accept")||k.toLowerCase().includes("negot")?"#30d158":"#ff9f0a";
+    return `<div class="dec-row">
+      <div class="dec-header"><span class="dec-label">${k}</span><span class="dec-val" style="color:${c}">${v}%</span></div>
+      <div class="dec-bar"><div class="dec-fill" style="width:${v}%;background:${c}"></div></div>
+    </div>`;
+  }).join("");
+
+  const infls = a.infl.map(inf => `
+    <div class="infl-row">
+      <div class="infl-header">
+        <span class="infl-from">${inf.from}</span>
+        <span class="infl-dir" style="color:${dirColor(inf.dir)}">${inf.dir} (${inf.str}/10)</span>
+      </div>
+      <div class="infl-info">${inf.info}</div>
+    </div>`).join("");
+
+  const usInfl = a.usInfl ? `
+    <div class="us-infl-box" style="background:${a.color}08;border:1px solid ${a.color}20">
+      <div class="us-infl-title" style="color:${a.color}">INFLUENCE ON US DECISIONS: ${a.usInfl.str}/10 — ${a.usInfl.dir}</div>
+      ${a.usInfl.ev.map(e=>`<div class="us-infl-ev">– ${e}</div>`).join("")}
+    </div>` : "";
+
+  return `
+    <div class="actor-tabs" id="actor-tabs">${actorTabs}</div>
+    ${alertHTML}
+    <div class="section-title" style="color:${a.color}">CORE OBJECTIVES</div>
+    ${objs}
+    <div class="two-col">
+      <div>
+        <div class="sub-title" style="color:${a.color}">DECISION CALCULUS</div>${decs}
+      </div>
+      <div>
+        <div class="sub-title" style="color:${a.color}">INFLUENCE PRESSURE</div>${infls}
+      </div>
+    </div>
+    ${usInfl}
+    <div class="two-col">
+      <div class="lev-con">
+        <div class="lev-con-title" style="color:#30d158">LEVERAGE</div>
+        ${a.lev.map(l=>`<div class="lev-con-item">– ${l}</div>`).join("")}
+      </div>
+      <div class="lev-con">
+        <div class="lev-con-title" style="color:#ff453a">CONSTRAINTS</div>
+        ${a.con.map(c=>`<div class="lev-con-item">– ${c}</div>`).join("")}
+      </div>
+    </div>`;
+}
+
+function renderInfluence() {
+  const rows = FLOWS.map(f => {
+    const dots = Array.from({length:f.s}).map((_,j)=>`<div class="flow-dot" style="background:${f.c};opacity:${0.35+j*0.07}"></div>`).join("");
+    return `<div class="flow-row" style="background:rgba(255,255,255,.02);border:1px solid ${f.c}${f.isNew?'30':'12'}">
+      ${f.isNew?`<span style="font-size:.3rem;font-weight:800;color:#ffd60a;background:rgba(255,214,10,.15);padding:1px 4px;border-radius:2px;align-self:flex-start;flex-shrink:0;margin-top:2px">NEW</span>`:''}
+      <span class="flow-from" style="color:${f.c}">${f.f}</span>
+      <div class="flow-dots">${dots}</div>
+      <span class="flow-arrow" style="color:${f.c}">→</span>
+      <span class="flow-to">${f.t}</span>
+      <div style="flex:1;margin-left:4px">
+        <div class="flow-dir" style="color:${dirColor(f.dir)}">${f.dir}</div>
+        <div class="flow-info">${f.i}</div>
+      </div>
+      <span class="flow-str" style="color:${f.c}">${f.s}</span>
+    </div>`;
+  }).join("");
+
+  return `
+    <div class="section-title" style="color:#ff9f0a">STRATEGIC INFLUENCE FLOWS — DAY 34 UPDATE</div>
+    ${rows}
+    <div class="insight-box">
+      <div class="insight-title">GAME THEORY SYNTHESIS — APR 2, 2026</div>
+      <div class="insight-text">
+        Three simultaneous structural shifts are reshaping the game matrix. <span style="color:#bf5af2;font-weight:600">UAE crossing into combat</span> (WSJ exclusive) introduces a new player that was previously in the "covert support" strategy — dramatically changing the coalition calculation and potentially giving Trump an exit ramp by handing Hormuz responsibility to a Gulf coalition. <span style="color:#ff453a;font-weight:600">Iran's Passover barrage</span> represents the IRGC taking unilateral control of Iran's war posture, functionally ending Pezeshkian's diplomatic track in the short term. And <span style="color:#64d2ff;font-weight:600">China's 5-point initiative</span> is the first time Beijing has applied direct pressure on both sides simultaneously — with Iran's 90% oil export dependence on China as the real lever. <span style="color:#ffd60a;font-weight:600">Tonight's Trump address</span> is the single highest-information event: if he formalizes exit, the Nash equilibrium collapses toward (Withdraw, Accept). If he escalates, the matrix shifts toward (Escalate, Total war). The UAE Hormuz force plan may be the designed off-ramp.
+      </div>
+    </div>
+    <div class="net-grid">
+      <div class="net-card">
+        <div class="net-actor">US (Trump)</div>
+        <div class="net-result" style="color:#5ac8fa">NET: Exit impulse now dominant</div>
+        <div class="net-detail">Domestic pressure (8) + cost/economy (8) now outweighs Israel (9) + UAE (8). Trump's "Iran doesn't need to make a deal" is the clearest exit signal yet.</div>
+      </div>
+      <div class="net-card">
+        <div class="net-actor">Iran</div>
+        <div class="net-result" style="color:#ff453a">NET: IRGC won internal battle</div>
+        <div class="net-detail">IRGC (9) vs Pezeshkian (4) + China (6). Passover barrage signals IRGC fully overriding civilian leadership. But China pressure may be the circuit-breaker.</div>
+      </div>
+    </div>`;
+}
+
+function renderMatrix() {
+  const colH = MATRIX.cols.map(c=>`<th style="color:#ff9f0a;font-size:.44rem">${c}</th>`).join("");
+  const rows = MATRIX.rows.map((r,ri) => {
+    const cells = MATRIX.vals[ri].map((v,ci) => {
+      const nash = MATRIX.nash[0]===ri&&MATRIX.nash[1]===ci;
+      const shift = MATRIX.shifting[0]===ri&&MATRIX.shifting[1]===ci;
+      const c1 = v[0]>=0?"#30d158":"#ff453a";
+      const c2 = v[1]>=0?"#30d158":"#ff453a";
+      return `<td class="${nash?'nash-cell':shift?'shift-cell':''}" style="position:relative">
+        ${nash?`<div class="nash-tag">NASH↓</div>`:''}
+        ${shift?`<div class="shift-tag">→TARGET</div>`:''}
+        <span style="color:${c1};font-weight:700">${v[0]>0?'+':''}${v[0]}</span>
+        <span style="color:rgba(255,255,255,.15);margin:0 3px;font-size:.5rem">|</span>
+        <span style="color:${c2};font-weight:700">${v[1]>0?'+':''}${v[1]}</span>
+      </td>`;
+    }).join("");
+    return `<tr><td style="color:#5ac8fa;font-weight:600;border-right:1px solid rgba(255,255,255,.05);text-align:left;font-size:.46rem">${r}</td>${cells}</tr>`;
+  }).join("");
+
+  const mods = [
+    {who:"Israel (9/10)",shift:[15,5,-20],c:"#30d158",note:"Passover attacks + completion phase"},
+    {who:"UAE entering war",shift:[20,10,-30],c:"#bf5af2",note:"NEW — first Gulf combatant"},
+    {who:"China/Pak initiative",shift:[-15,-5,20],c:"#64d2ff",note:"NEW — Beijing's economic leverage"},
+    {who:"US Domestic (8/10)",shift:[-20,-5,25],c:"#5ac8fa",note:"2/3 Americans want exit"},
+    {who:"Trump exit signal",shift:[-25,0,25],c:"#ffd60a",note:"'Doesn't have to make a deal'"},
+    {who:"IRGC escalation",shift:[10,15,-25],c:"#ff453a",note:"Passover barrage overrides Pez."},
+  ];
+  const modCards = mods.map(m => {
+    const mrows = ["Escalate","Continue","Negotiate"].map((l,j) => {
+      const vc = m.shift[j]>0?"#ff453a":m.shift[j]<0?"#30d158":"rgba(255,255,255,.3)";
+      return `<div class="mod-row"><span class="mod-label">${l}</span><span class="mod-val" style="color:${vc}">${m.shift[j]>0?'+':''}${m.shift[j]}%</span></div>`;
+    }).join("");
+    return `<div class="mod-card" style="border:1px solid ${m.c}18">
+      <div class="mod-title" style="color:${m.c}">${m.who}</div>
+      <div style="font-size:.38rem;color:rgba(255,255,255,.3);margin-bottom:5px">${m.note}</div>
+      ${mrows}
+    </div>`;
+  }).join("");
+
+  return `
+    <div class="section-title" style="color:#ff2d55">PAYOFF MATRIX: US vs IRAN — DAY 34</div>
+    <div style="display:flex;gap:12px;margin-bottom:12px;align-items:center;flex-wrap:wrap">
+      <span style="font-size:.52rem;color:#5ac8fa;font-weight:600">US (rows)</span>
+      <span style="color:rgba(255,255,255,.15)">vs</span>
+      <span style="font-size:.52rem;color:#ff9f0a;font-weight:600">Iran (cols)</span>
+      <span style="font-size:.4rem;color:rgba(255,255,255,.2)">— (US payoff | Iran payoff)</span>
+      <span style="font-size:.4rem;color:#ffd60a">NASH↓ = current equilibrium eroding / →TARGET = Trump exit path</span>
+    </div>
+    <div class="matrix-wrap">
+      <table>
+        <thead><tr><th style="text-align:left;color:rgba(255,255,255,.2);font-size:.42rem">US \\ IRAN</th>${colH}</tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <div class="section-title" style="color:#bf5af2;margin-top:16px">HOW TODAY'S EVENTS SHIFT THE GAME</div>
+    <div class="mods-grid">${modCards}</div>
+    <div class="insight-box">
+      <div class="insight-title">NASH EQUILIBRIUM STATUS — ACTIVELY BREAKING (DAY 34)</div>
+      <div class="insight-text">
+        The old Nash at (Continue air, Attrit) is being pushed by two competing forces: <span style="color:#ff453a;font-weight:600">IRGC escalation + Israel completion phase</span> pushes toward the top-left (Escalate, Total war) while <span style="color:#30d158;font-weight:600">Trump exit signals + China pressure</span> pull toward bottom-right (Negotiate/Withdraw, Accept). The UAE entering war creates a NEW strategic variable not captured in a 2-player matrix — it could enable Trump's preferred exit: withdraw from bilateral war, hand Hormuz to a UAE-led coalition, declare victory. If tonight's address signals this, the matrix collapses toward (+3,+3) for the first time.
+      </div>
+    </div>`;
+}
+
+function renderTree() {
+  const nodes = TREE.map((node,i) => {
+    const bw = Math.min(100,node.p*1.8);
+    const kids = node.kids && treeOpen[i] ? `
+      <div class="tree-children">
+        ${node.kids.map(k => {
+          const bk = Math.min(100,k.p*2.8);
+          return `<div class="tree-child">
+            <span class="tree-child-label" style="color:${k.c}">${k.l}</span>
+            <span class="tree-child-note">${k.note}</span>
+            <div class="tree-child-bar"><div style="width:${bk}%;height:100%;background:${k.c};border-radius:2px"></div></div>
+            <span class="tree-child-pct" style="color:${k.c}">${k.p}%</span>
+          </div>`;
+        }).join("")}
+      </div>` : "";
+    return `
+      <div class="tree-node">
+        <div class="tree-parent" style="border:1px solid ${node.c}25" data-tree-idx="${i}">
+          ${node.kids?`<span class="tree-caret ${treeOpen[i]?'open':''}" style="color:${node.c}">▶</span>`:'<span style="width:14px;display:inline-block"></span>'}
+          <span class="tree-label" style="color:${node.c}">${node.l}</span>
+          <span class="tree-note">${node.note}</span>
+          <div class="tree-bar"><div class="tree-bar-fill" style="width:${bw}%;background:${node.c}"></div></div>
+          <span class="tree-pct" style="color:${node.c}">${node.p}%</span>
+        </div>
+        ${kids}
+      </div>`;
+  }).join("");
+
+  return `
+    <div class="section-title" style="color:#ff2d55">OUTCOME PROBABILITY TREE — DAY 34 UPDATE</div>
+    <div style="font-size:.44rem;color:rgba(255,255,255,.3);margin-bottom:12px">All probabilities updated post-Passover barrage, UAE announcement, and Trump exit signals. Tonight's address is a live forcing function.</div>
+    ${nodes}
+    <div class="esc-de-grid">
+      <div class="esc-box" style="background:rgba(255,45,85,.04);border:1px solid rgba(255,45,85,.12)">
+        <div class="esc-title" style="color:#ff453a">ESCALATION DRIVERS (DAY 34)</div>
+        ${[
+          {t:"IRGC 3-wave Passover barrage — 16 wounded Israel",h:true},
+          {t:"Qatar QatarEnergy tanker 'Aqua 1' struck by cruise missile",h:true},
+          {t:"Kuwait airport fuel depot ablaze — Iranian drone",h:true},
+          {t:"~50 Iran missiles/drones on UAE in single day",h:true},
+          {t:"Yemen-Iran-Hezbollah first joint coordinated operation",h:true},
+          {t:"Israel 'completion phase' — economic infrastructure now target",h:false},
+          {t:"UAE entering war — Iran threatened to escalate vs. any Gulf combatant",h:false},
+          {t:"IRGC threats against 18 US tech companies globally",h:false},
+        ].map(d=>`<div class="esc-item${d.h?' hot':''}">– ${d.t}</div>`).join("")}
+      </div>
+      <div class="esc-box" style="background:rgba(48,209,88,.04);border:1px solid rgba(48,209,88,.12)">
+        <div class="esc-title" style="color:#30d158">DE-ESCALATION DRIVERS (DAY 34)</div>
+        ${[
+          {t:"Trump 9PM address — potential exit announcement",h:true},
+          {t:"China-Pakistan joint 5-point ceasefire initiative (Beijing's biggest move)",h:true},
+          {t:"Trump: 'Iran doesn't have to make a deal' — unilateral exit path",h:true},
+          {t:"2/3 Americans want quick exit (Reuters/Ipsos poll)",h:false},
+          {t:"Pezeshkian EU back-channel still active",h:false},
+          {t:"UAE Hormuz force = potential US exit mechanism",h:false},
+          {t:"France in talks with 35 countries on post-war demining",h:false},
+          {t:"Apr 6 energy strike deadline — Trump obliteration ultimatum",h:false},
+        ].map(d=>`<div class="esc-item${d.h?' hot':''}">– ${d.t}</div>`).join("")}
+      </div>
+    </div>`;
+}
+
+function renderTimeline() {
+  const filters = [{id:"all",l:"ALL"},{id:"cf",l:"CEASE",c:"#30d158"},{id:"es",l:"ESCAL",c:"#ff2d55"},{id:"gw",l:"GROUND",c:"#ff9f0a"},{id:"rg",l:"REGIME",c:"#bf5af2"}];
+  const fBtns = filters.map(f=>`
+    <button class="tl-filter ${tlFilter===f.id?'active':''}" data-flt="${f.id}"
+      style="${tlFilter===f.id?`background:${f.c||'#ff2d55'}18;border-color:${f.c||'#ff2d55'}35;color:${f.c||'#ff2d55'}`:''}">${f.l}</button>
+  `).join("");
+
+  const entries = [...TL].reverse().map((t,i) => `
+    <div class="tl-entry ${i===0?'latest':''} ${t.hot&&i>0?'hot':''}">
+      <div class="tl-date">
+        <div class="tl-date-main" style="color:${i===0?'#ff2d55':t.hot?'#ffd60a':'rgba(255,255,255,.4)'}">${t.d}</div>
+        <div class="tl-date-day">Day ${t.day}</div>
+      </div>
+      ${t.hot&&i>0?`<span class="new-badge">NEW</span>`:''}
+      <div class="tl-ev">${t.ev}</div>
+      <div class="tl-nums">
+        <span class="tl-cf">CF${t.cf}%</span>
+        <span class="tl-es">ES${t.es}</span>
+      </div>
+    </div>`).join("");
+
+  return `
+    <div class="timeline-header">
+      <div>
+        <div class="section-title" style="color:#ff2d55">PROBABILITY TREND — 34 DAYS</div>
+        <div style="font-size:.42rem;color:rgba(255,255,255,.25);margin-top:2px">Feb 28 – Apr 2, 2026 · Passover barrage + UAE entry + Trump address tonight</div>
+      </div>
+      <div class="tl-filters" id="tl-filters">${fBtns}</div>
+    </div>
+    <div class="chart-wrap"><canvas id="tlChart"></canvas></div>
+    <div class="tl-log">${entries}</div>`;
+}
+
+function initChart() {
+  const canvas = document.getElementById("tlChart");
+  if(!canvas) return;
+  if(chart){ chart.destroy(); chart=null; }
+  const labels = TL.map(t=>t.d);
+  const datasets = [];
+  if(tlFilter==="all"||tlFilter==="es") datasets.push({label:"Escalation",data:TL.map(t=>t.es),borderColor:"#ff2d55",backgroundColor:"rgba(255,45,85,.08)",fill:true,tension:.4,pointRadius:0,borderWidth:2});
+  if(tlFilter==="all"||tlFilter==="gw") datasets.push({label:"Ground War",data:TL.map(t=>t.gw),borderColor:"#ff9f0a",backgroundColor:"rgba(255,159,10,.08)",fill:true,tension:.4,pointRadius:0,borderWidth:2});
+  if(tlFilter==="all"||tlFilter==="cf") datasets.push({label:"Ceasefire",data:TL.map(t=>t.cf),borderColor:"#30d158",backgroundColor:"rgba(48,209,88,.1)",fill:true,tension:.4,pointRadius:0,borderWidth:2.5});
+  if(tlFilter==="all"||tlFilter==="rg") datasets.push({label:"Regime Change",data:TL.map(t=>t.rg),borderColor:"#bf5af2",backgroundColor:"rgba(191,90,242,.08)",fill:true,tension:.4,pointRadius:0,borderWidth:1.5});
+  chart = new Chart(canvas, {
+    type:"line", data:{labels,datasets},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      interaction:{mode:"index",intersect:false},
+      plugins:{
+        legend:{display:false},
+        tooltip:{backgroundColor:"rgba(8,12,10,.95)",borderColor:"rgba(0,255,136,.15)",borderWidth:1,titleColor:"#00ff88",bodyColor:"rgba(255,255,255,.6)",titleFont:{size:10},bodyFont:{size:10}}
+      },
+      scales:{
+        x:{grid:{color:"rgba(255,255,255,.03)"},ticks:{color:"rgba(255,255,255,.25)",font:{size:9}},border:{color:"rgba(255,255,255,.06)"}},
+        y:{min:0,max:100,grid:{color:"rgba(255,255,255,.03)"},ticks:{color:"rgba(255,255,255,.25)",font:{size:9},callback:v=>v+"%"},border:{color:"rgba(255,255,255,.06)"}},
+      }
+    }
+  });
+}
+
+function attachActorEvents() {
+  document.querySelectorAll("[data-ai]").forEach(btn => {
+    btn.addEventListener("click",()=>{ currentActor=parseInt(btn.dataset.ai); render(); });
+  });
+}
+function attachTreeEvents() {
+  document.querySelectorAll("[data-tree-idx]").forEach(el => {
+    el.addEventListener("click",()=>{ const i=parseInt(el.dataset.treeIdx); treeOpen[i]=!treeOpen[i]; render(); });
+  });
+}
+function attachTLFilterEvents() {
+  document.querySelectorAll("[data-flt]").forEach(btn => {
+    btn.addEventListener("click",()=>{ tlFilter=btn.dataset.flt; render(); });
+  });
+}
+
+render();
+</script>
+
+<!-- ═══ Auto-injected by US-Iran Monitor Agent · 2026-04-01T21:01:10.555108 ═══ -->
+<script>
+(function() {
+  var data = {"ceasefire_pct": 18, "ceasefire_delta": "+3", "ceasefire_reasoning": "Trump stated the US could be done with the war in 2-3 weeks and extended the energy strikes deadline to April 6, signaling some willingness to wind down. However, Iran's FM Araghchi explicitly said he has 'no faith in talks' with Washington, Iran rejected the US 15-point peace plan, and Iran demands a comprehensive regional end to war (including Lebanon), making a near-term ceasefire unlikely. The slight upward delta reflects Trump's rhetorical openness, offset by Iran's categorical rejection of negotiations.", "escalation": 82, "escalation_delta": "+5", "escalation_reasoning": "Today saw multiple major escalatory actions: Iran hit Kuwait International Airport fuel depots with drones (causing a massive blaze), struck an oil tanker off Qatar's coast, launched three waves of missiles at Israel (hitting Tel Aviv), and the IRGC issued unprecedented threats against 18 US tech companies (including Apple, Google, Nvidia, Microsoft, Tesla, Boeing) effective April 1. Simultaneously, US-Israeli airstrikes continued battering Tehran, and the Pentagon is actively preparing weeks of ground operations including potential raids on Kharg Island. The April 6 energy strike deadline looms just 5 days away.", "ground_war_pct": 35, "ground_war_delta": "+8", "ground_war_reasoning": "The Washington Post reported the Pentagon is preparing 'weeks of ground operations' in Iran, including raids on Kharg Island and Strait of Hormuz coastal sites. At least 2,500 Marines aboard USS Tripoli plus 82nd Airborne paratroopers have deployed to the region. While no ground invasion has been ordered yet and Trump hasn't approved the plans, the infrastructure and troop positioning for limited ground operations are actively being prepared, representing a significant increase in ground war probability.", "ticker_items": ["🔴 Iran hits Kuwait International Airport fuel depots with drone attack, causing massive blaze", "🔴 Iranian cruise missile strikes oil tanker 17 nautical miles north of Doha, Qatar", "🔴 Iran launches three waves of missiles at Israel, hitting Tel Aviv on April 1", "🔴 US-Israeli airstrikes continue battering Tehran; pharmaceutical plants and steel factories in Isfahan hit", "🟡 IRGC threatens to destroy 18 US tech companies (Apple, Google, Nvidia, Microsoft, Tesla, Boeing) in Middle East starting April 1", "🟡 Trump says war could end in 2-3 weeks, scheduled to address the nation Wednesday evening", "🟡 Pentagon prepares weeks of limited ground operations in Iran including Kharg Island raids; Marines and 82nd Airborne deploying", "🟢 Trump extended pause on Iranian energy infrastructure strikes to April 6 deadline, citing Iranian government request"], "summary": "The US-Iran war is on Day 32-33 with active high-intensity combat: Iran is expanding attacks on Gulf state infrastructure (Kuwait airport, oil tankers near Qatar, Bahrain facilities) while launching missile waves at Israel, and the IRGC issued extraordinary threats against 18 major US corporations. The US-Israeli air campaign continues relentlessly against Tehran and Iranian military/industrial targets, while the Pentagon actively prepares limited ground operations. Diplomatic prospects remain dim — Iran categorically rejects negotiations while Trump signals he may unilaterally wind down in 2-3 weeks regardless of a deal, with the critical April 6 energy strike deadline approaching.", "sources_count": 28, "sources_breakdown": {"military": 12, "diplomatic": 8, "economic": 5, "other": 3}, "sources_quality": "good", "sources_quality_reason": "Found 28+ fresh articles from major outlets (CNN, AP, Al Jazeera, Reuters/NPR, Washington Post, Wikipedia, Britannica, Bloomberg, Euronews, Military.com, Jerusalem Post) with multiple articles updated within the last few hours covering all dimensions of the conflict."};
+
+  // ── Update header stats ──────────────────────────────────────────────────
+  var statDivs = document.querySelectorAll('.stat');
+  statDivs.forEach(function(stat) {
+    var label = stat.querySelector('.stat-label');
+    if (!label) return;
+    var val   = stat.querySelector('.stat-val');
+    var delta = stat.querySelector('.stat-delta');
+    var lbl   = label.textContent.trim();
+
+    if (lbl === 'CEASEFIRE' && val) {
+      val.textContent   = data.ceasefire_pct + '%';
+      if (delta) delta.textContent = data.ceasefire_delta;
+    }
+    if (lbl === 'ESCALATION' && val) {
+      val.textContent   = data.escalation;
+      if (delta) delta.textContent = data.escalation_delta;
+    }
+    if (lbl === 'GROUND WAR' && val) {
+      val.textContent   = data.ground_war_pct + '%';
+      if (delta) delta.textContent = data.ground_war_delta;
+    }
+  });
+
+  // ── Update news ticker ───────────────────────────────────────────────────
+  var ticker = document.querySelector('.ticker-inner');
+  if (ticker && data.ticker_items && data.ticker_items.length) {
+    ticker.innerHTML = data.ticker_items.map(function(item) {
+      return '<span class="ticker-item">' + item +
+             ' <span class="ticker-sep">///</span></span>';
+    }).join('');
+  }
+
+  // ── Update subtitle bar ──────────────────────────────────────────────────
+  var sub = document.querySelector('.brand-sub');
+  if (sub) {
+    sub.textContent = 'LIVE — APR 01, 2026 '
+      + '21:01 UTC — AUTO-REFRESHED BY MONITOR AGENT';
+  }
+
+  // ── Show update toast ────────────────────────────────────────────────────
+  var toast = document.createElement('div');
+  toast.style.cssText = [
+    'position:fixed', 'bottom:20px', 'right:20px',
+    'background:rgba(0,0,0,.88)', 'border:1px solid rgba(0,255,136,.4)',
+    'border-radius:8px', 'padding:10px 16px',
+    'font-size:.5rem', 'color:#00ff88',
+    'z-index:9999', 'font-family:monospace', 'letter-spacing:.08em',
+    'line-height:1.6'
+  ].join(';');
+  toast.innerHTML =
+    '✓ LIVE UPDATE &nbsp;21:01 UTC<br>' +
+    '<span style="color:rgba(255,255,255,.4);font-size:.4rem">' +
+    'Monitor agent refreshed</span>';
+  document.body.appendChild(toast);
+  setTimeout(function() {
+    toast.style.transition = 'opacity .5s';
+    toast.style.opacity = '0';
+    setTimeout(function() { toast.remove(); }, 500);
+  }, 7000);
+
+})();
+</script>
+<!-- ═══ End monitor agent injection ═══ -->
+
+</body>
+</html>
