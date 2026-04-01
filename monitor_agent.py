@@ -45,7 +45,30 @@ def fetch_latest(client: anthropic.Anthropic) -> dict | None:
 
 Search for the most recent news about the US-Iran war, conflict, or tensions from the last 24 hours.
 
-After searching, return ONLY a valid JSON object (no explanation, no markdown fences, just JSON):
+SEARCH STRATEGY — run MULTIPLE searches to get balanced coverage across all perspectives:
+
+ROUND 1 — Western / international wire services:
+  Search: "Iran US war" site:reuters.com OR site:apnews.com OR site:bbc.com OR site:aljazeera.com
+
+ROUND 2 — Iranian state media (official Tehran perspective):
+  Search: "Iran war ceasefire" site:nournews.ir OR site:irna.ir OR site:presstv.ir OR site:tasnimnews.com
+  Also visit: https://nournews.ir/en/Service/AllNews  (scan latest headlines)
+
+ROUND 3 — Palestinian / Arab media (ground-level regional view):
+  Search: "Iran Israel US" site:palestinechronicle.com OR site:middleeasteye.net OR site:arabnews.com OR site:thenationalnews.com
+  Also check: https://www.palestinechronicle.com for their latest live blog
+
+ROUND 4 — Israeli media (Israeli perspective):
+  Search: "Iran attack ceasefire" site:timesofisrael.com OR site:haaretz.com OR site:ynetnews.com
+
+ROUND 5 — Gulf / financial:
+  Search: "Iran Hormuz oil war" site:gulfnews.com OR site:zawya.com OR site:bloomberg.com OR site:cnbc.com
+
+For each search round, read the actual articles — do not just list headlines.
+When you find conflicting accounts of the same event across different sources, note the discrepancy.
+The goal is to understand the SAME situation through multiple national lenses.
+
+After all searches, return ONLY a valid JSON object (no explanation, no markdown fences, just JSON):
 {{
   "ceasefire_pct": <integer 0-100>,
   "ceasefire_delta": "<like +2 or -3>",
@@ -68,13 +91,16 @@ After searching, return ONLY a valid JSON object (no explanation, no markdown fe
 
   "sources_count": <integer — total number of individual news articles/sources you read>,
   "sources_breakdown": {{
-    "military": <integer — articles about strikes, weapons, casualties>,
-    "diplomatic": <integer — articles about talks, negotiations, statements>,
-    "economic": <integer — articles about oil, sanctions, markets>,
-    "other": <integer — anything else>
+    "western": <integer — Reuters, AP, BBC, CNN, Bloomberg, Al Jazeera>,
+    "iranian": <integer — Nour News, IRNA, PressTV, Tasnim>,
+    "arab_palestinian": <integer — Palestine Chronicle, Middle East Eye, Arab News, Gulf News>,
+    "israeli": <integer — Times of Israel, Haaretz, Ynet>,
+    "financial": <integer — Bloomberg, CNBC, Zawya, oil/markets focus>
   }},
   "sources_quality": "good" | "limited" | "poor",
-  "sources_quality_reason": "one sentence — e.g. found 12 fresh articles from major outlets, or only found 3 older articles, coverage is thin today",
+  "sources_quality_reason": "one sentence — which perspectives had good coverage today and which were thin",
+  "perspective_gaps": "one sentence — note any major perspective that was missing or had very little to say today",
+  "key_discrepancy": "one sentence — the single biggest factual conflict between sources (e.g. Iran denies X that Reuters reported), or 'none significant' if accounts broadly align",
 
   "confidence": {{
     "ceasefire_low": <integer — pessimistic estimate>,
@@ -141,10 +167,12 @@ Rules:
 - 🟡 = political statements, threats, negotiations in doubt
 - 🟢 = diplomacy, ceasefire talks, de-escalation moves
 - Include 5-8 ticker_items covering today's key developments
+- Try to include at least one ticker item sourced from Iranian/Arab media if available
 - For each reasoning field: cite specific headlines or events you found, explain the logic clearly
+- When Western and non-Western sources contradict each other, note it in your reasoning
 - Count every distinct article or source you read for sources_count
 - Be honest about sources_quality: if news is sparse today, say so
-- Base probability estimates on the actual news you find
+- Base probability estimates on the COMBINED picture from all sources, not just Western wire services
 
 PAYOFF MATRIX INSTRUCTIONS:
 The matrix has 3 US strategies (rows) vs 3 Iran strategies (cols).
@@ -531,12 +559,19 @@ def run_update(client: anthropic.Anthropic, open_browser: bool = False) -> bool:
     quality_icon = {"GOOD": "🟢", "LIMITED": "🟡", "POOR": "🔴"}.get(quality, "⚪")
     print(f"\n  📰 News gathered : {count} articles  {quality_icon} Coverage: {quality}")
     if breakdown:
-        print(f"     └─ Military: {breakdown.get('military',0)}  "
-              f"Diplomatic: {breakdown.get('diplomatic',0)}  "
-              f"Economic: {breakdown.get('economic',0)}  "
-              f"Other: {breakdown.get('other',0)}")
+        print(f"     └─ 🌐 Western: {breakdown.get('western',0)}  "
+              f"🇮🇷 Iranian: {breakdown.get('iranian',0)}  "
+              f"🕌 Arab/Palestinian: {breakdown.get('arab_palestinian',0)}  "
+              f"🇮🇱 Israeli: {breakdown.get('israeli',0)}  "
+              f"💹 Financial: {breakdown.get('financial',0)}")
     if quality_reason:
         print(f"     └─ {quality_reason}")
+    discrepancy = data.get("key_discrepancy", "")
+    if discrepancy and discrepancy.lower() != "none significant":
+        print(f"  ⚠️  Source conflict : {discrepancy}")
+    gap = data.get("perspective_gaps", "")
+    if gap:
+        print(f"  🔍 Coverage gap   : {gap}")
 
     # Write updated HTML
     updated_html = build_updated_html(data)
