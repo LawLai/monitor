@@ -548,7 +548,24 @@ def run_update(client: anthropic.Anthropic, open_browser: bool = False) -> bool:
 
     if open_browser:
         webbrowser.open(OUTPUT_HTML.resolve().as_uri())
-        print(f"  🌐 Opened in browser")
+
+    # ── Done banner ───────────────────────────────────────────────────────────
+    live_url = "https://lawlai.github.io/iran-monitor/us_iran_monitor_live.html"
+    now_str  = datetime.now().strftime("%H:%M:%S")
+    print(f"""
+╔══════════════════════════════════════════════════════╗
+║  ✅ UPDATE COMPLETE  {now_str}                      ║
+║                                                      ║
+║  🌐 {live_url[:50]}  ║
+╚══════════════════════════════════════════════════════╝""")
+
+    # Play a short beep so you hear it even without watching the screen
+    try:
+        import winsound
+        winsound.Beep(1000, 300)   # frequency=1000Hz, duration=300ms
+        winsound.Beep(1200, 200)
+    except Exception:
+        pass   # non-Windows or no audio — silently skip
 
     return True
 
