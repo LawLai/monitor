@@ -27,11 +27,11 @@ SOURCE_HTML = Path("us_iran_war_game_theory_monitor_day34.html")
 OUTPUT_HTML = Path("us_iran_monitor_live.html")
 
 # ── Model & pricing (edit here if Anthropic changes rates) ────────────────────
-MODEL         = "claude-haiku-4-5-20251001"  # ~6× cheaper than Opus
-PRICE_INPUT   = 0.80   # USD per 1M input tokens
-PRICE_CACHE_W = 1.00   # USD per 1M cache-write tokens
-PRICE_CACHE_R = 0.08   # USD per 1M cache-read tokens (90% cheaper than normal)
-PRICE_OUTPUT  = 4.00   # USD per 1M output tokens
+MODEL         = "claude-sonnet-4-6"  # supports web search, ~40% cheaper than Opus
+PRICE_INPUT   = 3.00   # USD per 1M input tokens
+PRICE_CACHE_W = 3.75   # USD per 1M cache-write tokens
+PRICE_CACHE_R = 0.30   # USD per 1M cache-read tokens (90% cheaper than normal)
+PRICE_OUTPUT  = 15.00  # USD per 1M output tokens
 BUDGET_LIMIT  = 1.80   # USD — hard abort to protect credits; target is <$1/run
 
 
@@ -158,8 +158,7 @@ Rules:
         call_kwargs = dict(
             model=MODEL,
             max_tokens=2000,     # was 4000 — output JSON needs ~1200 tokens max
-            tools=[{"type": "web_search_20260209", "name": "web_search",
-                    "allowed_callers": ["direct"]}],
+            tools=[{"type": "web_search_20260209", "name": "web_search"}],
             messages=messages,
             extra_headers={"anthropic-beta": "prompt-caching-2024-07-31"},
         )
