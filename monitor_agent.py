@@ -9,12 +9,15 @@ Usage:
   python monitor_agent.py --once   # run once and exit (no browser)
 
 Requirements:
-  pip install anthropic
-  Set environment variable: ANTHROPIC_API_KEY=your-key-here
+  pip install anthropic google-genai
+  Set environment variables:
+    ANTHROPIC_API_KEY=your-claude-key
+    GEMINI_API_KEY=your-gemini-key
 """
 
 import anthropic
 import json
+import os
 import re
 import subprocess
 import time
@@ -23,16 +26,19 @@ import webbrowser
 import xml.etree.ElementTree as ET
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
+from google import genai
 
 # ── File paths ────────────────────────────────────────────────────────────────
 SOURCE_HTML = Path("us_iran_war_game_theory_monitor_day34.html")
 OUTPUT_HTML = Path("us_iran_monitor_live.html")
 
-# ── Model & pricing (edit here if Anthropic changes rates) ────────────────────
-MODEL         = "claude-opus-4-6"  # confirmed working; cost controlled by 3-round search + budget cap
-PRICE_INPUT   = 5.00   # USD per 1M input tokens
-PRICE_OUTPUT  = 25.00  # USD per 1M output tokens
-BUDGET_LIMIT  = 2.00   # USD — hard abort to protect credits
+# ── Model & pricing ──────────────────────────────────────────────────────────
+# Gemini: web search (cheap)  |  Claude: game theory analysis (quality)
+GEMINI_MODEL  = "gemini-2.5-flash"
+CLAUDE_MODEL  = "claude-opus-4-6"
+PRICE_INPUT   = 5.00    # Claude USD per 1M input tokens
+PRICE_OUTPUT  = 25.00   # Claude USD per 1M output tokens
+BUDGET_LIMIT  = 1.00    # USD — hard abort (now much lower since search is free via Gemini)
 
 
 # ── Step 1a: Fetch premium RSS feeds (WSJ, FT, NYT) ─────────────────────────
@@ -138,23 +144,75 @@ def fetch_rss() -> str:
     return header + "\n".join(f"• {r}" for r in results)
 
 
-# ── Step 1b: Fetch latest news & analysis via Claude + web search ─────────────
+# ── Step 1b: Search news via Gemini (cheap) ──────────────────────────────────
+
+def search_news_gemini() -> str:
+    """
+    Use Gemini + Google Search grounding to gather latest US-Iran news.
+    Cost: ~$0.0002 per call (practically free).
+    Returns plain text news summary.
+    """
+    gemini_key = os.environ.get("GEMINI_API_KEY", "")
+    if not gemini_key:
+        print("  ⚠  GEMINI_API_KEY not set — skipping Gemini search")
+        return ""
+
+    today = datetime.now().strftime("%B %d, %Y")
+
+    try:
+        client = genai.Client(api_key=gemini_key)
+        response = client.models.generate_content(
+            model=GEMINI_MODEL,
+            contents=f"""Today is {today}. Search for the latest US-Iran war news from the last 24 hours.
+
+Cover ALL of these perspectives:
+1. Military developments (strikes, casualties, deployments, weapons)
+2. Diplomatic moves (ceasefire talks, negotiations, UN activity)
+3. Iranian state perspective (what Tehran/IRGC is saying and doing)
+4. Israeli actions and statements
+5. Arab/Palestinian regional perspective
+6. Oil price and economic/sanctions impact
+7. Trump administration statements and signals
+
+For each development, note which source reported it.
+Include any conflicting accounts between Western and Iranian/Arab media.
+Be specific: cite names, numbers, locations, dates.""",
+            config=genai.types.GenerateContentConfig(
+                tools=[genai.types.Tool(google_search=genai.types.GoogleSearch())],
+            ),
+        )
+
+        result = response.text or ""
+
+        # Print Gemini cost
+        if response.usage_metadata:
+            inp = response.usage_metadata.prompt_token_count or 0
+            out = response.usage_metadata.candidates_token_count or 0
+            gcost = inp / 1_000_000 * 0.10 + out / 1_000_000 * 0.40
+            print(f"  ✓ Gemini: {out:,} tokens, ${gcost:.6f}")
+
+        return result
+
+    except Exception as e:
+        print(f"  ⚠  Gemini search failed: {e}")
+        return ""
+
+
+# ── Step 1c: Analyze news via Claude (quality) ───────────────────────────────
 
 def fetch_latest(client: anthropic.Anthropic) -> dict | None:
     """
-    Ask Claude to search the web for latest US-Iran news and return
-    structured JSON with updated probabilities and headlines.
+    Two-phase approach:
+      Phase 1 (free/cheap): RSS feeds + Gemini Google Search gather news
+      Phase 2 (Claude): Analyze the gathered news, produce game theory JSON
 
-    Cost controls:
-      - RSS pre-fetch (free) reduces reliance on paid web search
-      - Hard budget cap: aborts if BUDGET_LIMIT is reached mid-run
-      - Max 3 loop passes, max 2000 output tokens
-      - Skips web search round 1 when RSS already has ample coverage
-      - Retry on transient API errors (500/429)
+    Claude does NOT use web_search — all news is pre-gathered.
+    This cuts Claude cost from ~$1.50 to ~$0.10-0.20 per run.
     """
     today    = datetime.now().strftime("%B %d, %Y")
     time_now = datetime.now().strftime("%H:%M UTC")
 
+    # Phase 1a: RSS feeds (free)
     print(f"  📰 Fetching premium RSS feeds (WSJ / NYT / FT)...")
     rss_content = fetch_rss()
     if rss_content:
@@ -163,52 +221,35 @@ def fetch_latest(client: anthropic.Anthropic) -> dict | None:
     else:
         print(f"  ⚠  RSS: no articles retrieved (feeds may be unavailable)")
 
-    print(f"  🔍 Searching for latest US-Iran developments...")
-
-    rss_article_count = rss_content.count("\n•") if rss_content else 0
-    has_ample_rss = rss_article_count >= 10
-
-    if rss_content and has_ample_rss:
-        search_instructions = (
-            f"\n\nPREMIUM RSS CONTENT (WSJ / NYT / FT — already fetched, DO NOT search these sites):\n"
-            + rss_content
-            + "\n\nYou already have strong Western coverage from the RSS above. "
-              "Now run ONLY 2 web searches for perspectives NOT covered:\n"
-              "  1. Iranian + Arab media: \"Iran war\" — nournews.ir or irna.ir (Iranian view) + "
-              "palestinechronicle.com or middleeasteye.net (Arab/Palestinian)\n"
-              "  2. Israeli + financial: \"Iran attack\" — timesofisrael.com or haaretz.com + "
-              "oil/sanctions on bloomberg.com or cnbc.com\n"
-              "\n2 searches is enough — do not do more."
-        )
-    elif rss_content:
-        search_instructions = (
-            f"\n\nPREMIUM RSS CONTENT (WSJ / NYT / FT — already fetched):\n"
-            + rss_content
-            + "\n\nRSS coverage is thin today. Run 3 web searches for full coverage:\n"
-              "  1. Wire services: \"Iran US war\" — reuters.com, apnews.com, bbc.com, aljazeera.com\n"
-              "  2. Iranian + Arab media: \"Iran war\" — nournews.ir or irna.ir + "
-              "palestinechronicle.com or middleeasteye.net\n"
-              "  3. Israeli + financial: \"Iran attack\" — timesofisrael.com or haaretz.com + "
-              "bloomberg.com or cnbc.com\n"
-              "\n3 searches is enough — do not do more."
-        )
+    # Phase 1b: Gemini web search (practically free)
+    print(f"  🔍 Searching via Gemini + Google Search...")
+    gemini_news = search_news_gemini()
+    if gemini_news:
+        print(f"  ✓ Gemini: {len(gemini_news):,} chars of news gathered")
     else:
-        search_instructions = (
-            "\n\nNo RSS content available today — rely fully on web searches.\n"
-            "Run 3 web searches for balanced coverage:\n"
-            "  1. Wire services: \"Iran US war\" — reuters.com, apnews.com, bbc.com, aljazeera.com\n"
-            "  2. Iranian + Arab media: \"Iran war\" — nournews.ir or irna.ir + "
-            "palestinechronicle.com or middleeasteye.net\n"
-            "  3. Israeli + financial: \"Iran attack\" — timesofisrael.com or haaretz.com + "
-            "bloomberg.com or cnbc.com\n"
-            "\n3 searches is enough — do not do more."
-        )
+        print(f"  ⚠  Gemini: no results — Claude will work with RSS only")
 
-    static_prompt = f"""Today is {today} at {time_now}.
-{search_instructions}
+    # Build the combined news briefing for Claude
+    news_briefing = ""
+    if rss_content:
+        news_briefing += rss_content + "\n\n"
+    if gemini_news:
+        news_briefing += "=== GOOGLE NEWS SEARCH (via Gemini) ===\n" + gemini_news + "\n\n"
 
-Read actual articles, not just headlines. Note any discrepancies between sources.
+    if not news_briefing.strip():
+        print("  ✗ No news gathered from any source — cannot update")
+        return None
 
+    # Phase 2: Claude analysis (no web search tool — just analysis)
+    print(f"  🧠 Analyzing via Claude ({CLAUDE_MODEL})...")
+
+    analysis_prompt = f"""Today is {today} at {time_now}.
+
+Below is a news briefing about the US-Iran war gathered from multiple sources (RSS feeds from WSJ/NYT/FT + Google News search covering Western, Iranian, Arab, Israeli, and financial media).
+
+{news_briefing}
+
+Based on ALL the news above, produce a game theory analysis.
 Return ONLY a valid JSON object (no markdown, no explanation):
 {{
   "ceasefire_pct": <integer 0-100>,
@@ -226,9 +267,9 @@ Return ONLY a valid JSON object (no markdown, no explanation):
   "ticker_items": ["🔴 military event", "🟡 political statement", "🟢 diplomatic move"],
   "summary": "2-3 sentence intelligence summary",
 
-  "sources_count": <integer>,
+  "sources_count": <integer — total articles/sources in the briefing above>,
   "sources_breakdown": {{
-    "premium_rss": <integer — articles from WSJ/NYT/FT RSS feeds>,
+    "premium_rss": <integer — WSJ/NYT/FT RSS articles>,
     "western": <integer>, "iranian": <integer>,
     "arab_palestinian": <integer>, "israeli": <integer>, "financial": <integer>
   }},
@@ -284,96 +325,67 @@ Rules:
 - matrix cols: 0=Iran full escalate, 1=Iran attrit+block, 2=Iran accepts deal
 - payoff scale: -10 to +10 for each side in each cell
 - Nash cell = neither side gains by deviating unilaterally
-- Base all estimates on the combined picture from all 3 search rounds"""
+- Base all estimates on the combined news briefing above"""
 
-    messages = [{"role": "user", "content": static_prompt}]
+    messages = [{"role": "user", "content": analysis_prompt}]
 
-    total_input_tokens  = 0
-    total_output_tokens = 0
-    container_id        = None
-
-    for iteration in range(3):   # max 3 passes — was 5
-        call_kwargs = dict(
-            model=MODEL,
-            max_tokens=2000,     # was 4000 — JSON output needs ~1200 tokens max
-            tools=[{"type": "web_search_20260209", "name": "web_search"}],
+    # Single Claude call — no web search tool, no agentic loop needed
+    try:
+        response = client.messages.create(
+            model=CLAUDE_MODEL,
+            max_tokens=2000,
             messages=messages,
         )
-        if container_id:
-            call_kwargs["container_id"] = container_id
-
-        # Retry once on transient server errors (500/529) or rate limits (429)
+    except (anthropic.InternalServerError, anthropic.RateLimitError) as e:
+        print(f"  ⚠️  API error: {e} — retrying in 10 seconds...")
+        time.sleep(10)
         try:
-            response = client.messages.create(**call_kwargs)
-        except (anthropic.InternalServerError, anthropic.RateLimitError) as e:
-            print(f"  ⚠️  API error: {e} — retrying in 10 seconds...")
-            time.sleep(10)
+            response = client.messages.create(
+                model=CLAUDE_MODEL,
+                max_tokens=2000,
+                messages=messages,
+            )
+        except Exception as e2:
+            print(f"  ✗ Retry failed: {e2}")
+            return None
+
+    # Token tracking & cost
+    total_input  = response.usage.input_tokens
+    total_output = response.usage.output_tokens
+    cost_input   = total_input  / 1_000_000 * PRICE_INPUT
+    cost_output  = total_output / 1_000_000 * PRICE_OUTPUT
+    cost_total   = cost_input + cost_output
+
+    print(f"  🔢 Tokens  : {total_input:,} input  |  {total_output:,} output")
+    print(f"  💰 Claude  : ${cost_total:.4f}  ({CLAUDE_MODEL})")
+
+    if cost_total > BUDGET_LIMIT:
+        print(f"  🛑 Budget cap ${BUDGET_LIMIT:.2f} exceeded (${cost_total:.2f}) — result discarded")
+        return None
+
+    # Extract JSON from the response
+    for block in response.content:
+        if block.type == "text" and block.text.strip():
+            text = block.text.strip()
+            text = re.sub(r'^```(?:json)?\s*', '', text)
+            text = re.sub(r'\s*```$',          '', text)
             try:
-                response = client.messages.create(**call_kwargs)
-            except Exception as e2:
-                print(f"  ✗ Retry failed: {e2}")
-                return None
+                return json.loads(text)
+            except json.JSONDecodeError:
+                pass
+            match = re.search(r'\{[\s\S]*\}', text)
+            if match:
+                try:
+                    return json.loads(match.group())
+                except json.JSONDecodeError:
+                    pass
 
-        # Accumulate token counts
-        total_input_tokens  += response.usage.input_tokens
-        total_output_tokens += response.usage.output_tokens
-
-        # ── Budget guard — check after every API call ─────────────────────────
-        running_cost = (
-            total_input_tokens  / 1_000_000 * PRICE_INPUT  +
-            total_output_tokens / 1_000_000 * PRICE_OUTPUT
-        )
-        if running_cost > BUDGET_LIMIT:
-            print(f"  🛑 Budget cap ${BUDGET_LIMIT:.2f} reached "
-                  f"(${running_cost:.2f} spent so far) — stopping to protect credits")
-            return None
-
-        if response.stop_reason == "end_turn":
-            cost_input  = total_input_tokens  / 1_000_000 * PRICE_INPUT
-            cost_output = total_output_tokens / 1_000_000 * PRICE_OUTPUT
-            cost_total  = cost_input + cost_output
-
-            print(f"  🔢 Tokens  : {total_input_tokens:,} input  |  {total_output_tokens:,} output")
-            print(f"  💰 Cost    : ${cost_total:.4f}  ({MODEL})")
-
-            # Extract JSON from the final text response
-            for block in response.content:
-                if block.type == "text" and block.text.strip():
-                    text = block.text.strip()
-                    text = re.sub(r'^```(?:json)?\s*', '', text)
-                    text = re.sub(r'\s*```$',          '', text)
-                    try:
-                        return json.loads(text)
-                    except json.JSONDecodeError:
-                        pass
-                    match = re.search(r'\{[\s\S]*\}', text)
-                    if match:
-                        try:
-                            return json.loads(match.group())
-                        except json.JSONDecodeError:
-                            pass
-            # Save raw response for debugging
-            debug_file = Path("debug_last_response.txt")
-            raw_texts = [b.text for b in response.content if b.type == "text"]
-            debug_file.write_text("\n---\n".join(raw_texts), encoding="utf-8")
-            print(f"  ⚠️  Response received but could not parse JSON")
-            print(f"     Raw response saved to {debug_file} for debugging")
-            return None
-
-        elif response.stop_reason == "pause_turn":
-            messages.append({"role": "assistant", "content": response.content})
-            raw = getattr(response, "container", None)
-            if raw is not None:
-                container_id = getattr(raw, "id", raw)
-                print(f"  ⏳ Continuing search (pass {iteration + 2}/3, container={container_id[:12] if isinstance(container_id, str) else container_id}...)")
-            else:
-                print(f"  ⚠️  pause_turn but no container_id found — next call may fail")
-                print(f"  ⏳ Continuing search (pass {iteration + 2}/3)...")
-
-        else:
-            messages.append({"role": "assistant", "content": response.content})
-
-    print("  ⚠️  Reached max iterations without a final response")
+    # Save raw response for debugging
+    debug_file = Path("debug_last_response.txt")
+    raw_texts = [b.text for b in response.content if b.type == "text"]
+    debug_file.write_text("\n---\n".join(raw_texts), encoding="utf-8")
+    print(f"  ⚠️  Response received but could not parse JSON")
+    print(f"     Raw response saved to {debug_file} for debugging")
     return None
 
 
