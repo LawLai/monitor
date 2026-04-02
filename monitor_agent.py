@@ -26,6 +26,14 @@ from pathlib import Path
 SOURCE_HTML = Path("us_iran_war_game_theory_monitor_day34.html")
 OUTPUT_HTML = Path("us_iran_monitor_live.html")
 
+# ── Model & pricing (edit here if Anthropic changes rates) ────────────────────
+MODEL         = "claude-haiku-4-5-20251001"  # ~6× cheaper than Opus
+PRICE_INPUT   = 0.80   # USD per 1M input tokens
+PRICE_CACHE_W = 1.00   # USD per 1M cache-write tokens
+PRICE_CACHE_R = 0.08   # USD per 1M cache-read tokens (90% cheaper than normal)
+PRICE_OUTPUT  = 4.00   # USD per 1M output tokens
+BUDGET_LIMIT  = 1.80   # USD — hard abort to protect credits; target is <$1/run
+
 
 # ── Step 1: Fetch latest news & analysis via Claude + web search ──────────────
 
@@ -33,241 +41,175 @@ def fetch_latest(client: anthropic.Anthropic) -> dict | None:
     """
     Ask Claude to search the web for latest US-Iran news and return
     structured JSON with updated probabilities and headlines.
+
+    Cost controls:
+      - Uses Haiku (6× cheaper than Opus)
+      - Prompt caching on static instructions (90% cheaper on continuation passes)
+      - Hard budget cap: aborts if BUDGET_LIMIT is reached mid-run
+      - Max 3 loop passes (was 5)
+      - Max 2000 output tokens (was 4000)
     """
-    today = datetime.now().strftime("%B %d, %Y")
+    today    = datetime.now().strftime("%B %d, %Y")
     time_now = datetime.now().strftime("%H:%M UTC")
 
     print(f"  🔍 Searching for latest US-Iran developments...")
 
-    messages = [{
-        "role": "user",
-        "content": f"""Today is {today} at {time_now}.
+    # Static instructions — marked for caching so continuation passes cost 90% less
+    static_prompt = f"""Today is {today} at {time_now}.
 
-Search for the most recent news about the US-Iran war, conflict, or tensions from the last 24 hours.
+Search for the most recent US-Iran war news from the last 24 hours.
+Run 3 targeted searches for balanced multi-perspective coverage:
+  1. Wire services: "Iran US war {today}" — reuters.com, apnews.com, bbc.com, aljazeera.com
+  2. Regional media: "Iran war" — nournews.ir or irna.ir (Iranian view) + palestinechronicle.com or middleeasteye.net (Arab/Palestinian)
+  3. Israeli + financial: "Iran attack" — timesofisrael.com or haaretz.com + oil/sanctions on bloomberg.com or cnbc.com
 
-SEARCH STRATEGY — run MULTIPLE searches to get balanced coverage across all perspectives:
+Read actual articles, not just headlines. Note any discrepancies between sources. 3 searches is enough — do not do more.
 
-ROUND 1 — Western / international wire services:
-  Search: "Iran US war" site:reuters.com OR site:apnews.com OR site:bbc.com OR site:aljazeera.com
-
-ROUND 2 — Iranian state media (official Tehran perspective):
-  Search: "Iran war ceasefire" site:nournews.ir OR site:irna.ir OR site:presstv.ir OR site:tasnimnews.com
-  Also visit: https://nournews.ir/en/Service/AllNews  (scan latest headlines)
-
-ROUND 3 — Palestinian / Arab media (ground-level regional view):
-  Search: "Iran Israel US" site:palestinechronicle.com OR site:middleeasteye.net OR site:arabnews.com OR site:thenationalnews.com
-  Also check: https://www.palestinechronicle.com for their latest live blog
-
-ROUND 4 — Israeli media (Israeli perspective):
-  Search: "Iran attack ceasefire" site:timesofisrael.com OR site:haaretz.com OR site:ynetnews.com
-
-ROUND 5 — Gulf / financial:
-  Search: "Iran Hormuz oil war" site:gulfnews.com OR site:zawya.com OR site:bloomberg.com OR site:cnbc.com
-
-For each search round, read the actual articles — do not just list headlines.
-When you find conflicting accounts of the same event across different sources, note the discrepancy.
-The goal is to understand the SAME situation through multiple national lenses.
-
-After all searches, return ONLY a valid JSON object (no explanation, no markdown fences, just JSON):
+Return ONLY a valid JSON object (no markdown, no explanation):
 {{
   "ceasefire_pct": <integer 0-100>,
   "ceasefire_delta": "<like +2 or -3>",
-  "ceasefire_reasoning": "2-3 sentences explaining exactly which news stories pushed this number up or down, and why",
+  "ceasefire_reasoning": "2-3 sentences citing specific headlines and why the number moved",
 
   "escalation": <integer 0-100>,
   "escalation_delta": "<like +5 or -2>",
-  "escalation_reasoning": "2-3 sentences explaining exactly which news stories pushed this number up or down, and why",
+  "escalation_reasoning": "2-3 sentences citing specific headlines and why the number moved",
 
   "ground_war_pct": <integer 0-100>,
   "ground_war_delta": "<like +1 or -4>",
-  "ground_war_reasoning": "2-3 sentences explaining exactly which news stories pushed this number up or down, and why",
+  "ground_war_reasoning": "2-3 sentences citing specific headlines and why the number moved",
 
-  "ticker_items": [
-    "🔴 Direct military event or strike",
-    "🟡 Political statement or threat",
-    "🟢 Diplomatic or de-escalation news"
-  ],
-  "summary": "2-3 sentence intelligence summary of current situation",
+  "ticker_items": ["🔴 military event", "🟡 political statement", "🟢 diplomatic move"],
+  "summary": "2-3 sentence intelligence summary",
 
-  "sources_count": <integer — total number of individual news articles/sources you read>,
+  "sources_count": <integer>,
   "sources_breakdown": {{
-    "western": <integer — Reuters, AP, BBC, CNN, Bloomberg, Al Jazeera>,
-    "iranian": <integer — Nour News, IRNA, PressTV, Tasnim>,
-    "arab_palestinian": <integer — Palestine Chronicle, Middle East Eye, Arab News, Gulf News>,
-    "israeli": <integer — Times of Israel, Haaretz, Ynet>,
-    "financial": <integer — Bloomberg, CNBC, Zawya, oil/markets focus>
+    "western": <integer>, "iranian": <integer>,
+    "arab_palestinian": <integer>, "israeli": <integer>, "financial": <integer>
   }},
   "sources_quality": "good" | "limited" | "poor",
-  "sources_quality_reason": "one sentence — which perspectives had good coverage today and which were thin",
-  "perspective_gaps": "one sentence — note any major perspective that was missing or had very little to say today",
-  "key_discrepancy": "one sentence — the single biggest factual conflict between sources (e.g. Iran denies X that Reuters reported), or 'none significant' if accounts broadly align",
+  "sources_quality_reason": "one sentence",
+  "perspective_gaps": "one sentence — which perspective had thin coverage today",
+  "key_discrepancy": "one sentence — biggest factual conflict between sources, or 'none significant'",
 
   "confidence": {{
-    "ceasefire_low": <integer — pessimistic estimate>,
-    "ceasefire_high": <integer — optimistic estimate>,
-    "escalation_low": <integer>,
-    "escalation_high": <integer>,
-    "ground_war_low": <integer>,
-    "ground_war_high": <integer>
+    "ceasefire_low": <int>, "ceasefire_high": <int>,
+    "escalation_low": <int>, "escalation_high": <int>,
+    "ground_war_low": <int>, "ground_war_high": <int>
   }},
 
   "tree": [
-    {{"index": 0, "probability": <integer>, "note": "one short phrase explaining what news drove this change"}},
-    {{"index": 1, "probability": <integer>, "note": "one short phrase"}},
-    {{"index": 2, "probability": <integer>, "note": "one short phrase"}},
-    {{"index": 3, "probability": <integer>, "note": "one short phrase"}},
-    {{"index": 4, "probability": <integer>, "note": "one short phrase"}}
+    {{"index": 0, "probability": <int>, "note": "short phrase — Trump unilateral exit"}},
+    {{"index": 1, "probability": <int>, "note": "short phrase — War continues Apr-Jun"}},
+    {{"index": 2, "probability": <int>, "note": "short phrase — Negotiated ceasefire"}},
+    {{"index": 3, "probability": <int>, "note": "short phrase — Regime collapse"}},
+    {{"index": 4, "probability": <int>, "note": "short phrase — Nuclear/Black Swan"}}
   ],
 
   "actor_decisions": {{
-    "us":   {{"Withdraw": <integer>, "Negotiate": <integer>, "Escalate": <integer>}},
-    "iran": {{"Escalate": <integer>, "Attrit":    <integer>, "Negotiate": <integer>}}
+    "us":   {{"Withdraw": <int>, "Negotiate": <int>, "Escalate": <int>}},
+    "iran": {{"Escalate": <int>, "Attrit": <int>, "Negotiate": <int>}}
   }},
 
   "timeline_event": {{
-    "date":  "<like Apr 5>",
-    "day":   <integer — conflict day number>,
-    "cf":    <ceasefire_pct integer>,
-    "es":    <escalation integer>,
-    "gw":    <ground_war_pct integer>,
-    "rg":    14,
-    "event": "brief one-line summary of today's single most important development",
-    "hot":   <true if this is a major turning-point event, else false>
+    "date": "<like Apr 5>", "day": <int>,
+    "cf": <int>, "es": <int>, "gw": <int>, "rg": 14,
+    "event": "one-line summary of today's most important development",
+    "hot": <true|false>
   }},
 
   "matrix": {{
     "vals": [
-      [
-        [<US_payoff>, <Iran_payoff>],
-        [<US_payoff>, <Iran_payoff>],
-        [<US_payoff>, <Iran_payoff>]
-      ],
-      [
-        [<US_payoff>, <Iran_payoff>],
-        [<US_payoff>, <Iran_payoff>],
-        [<US_payoff>, <Iran_payoff>]
-      ],
-      [
-        [<US_payoff>, <Iran_payoff>],
-        [<US_payoff>, <Iran_payoff>],
-        [<US_payoff>, <Iran_payoff>]
-      ]
+      [[<US>,<Iran>],[<US>,<Iran>],[<US>,<Iran>]],
+      [[<US>,<Iran>],[<US>,<Iran>],[<US>,<Iran>]],
+      [[<US>,<Iran>],[<US>,<Iran>],[<US>,<Iran>]]
     ],
     "nash": [<row 0-2>, <col 0-2>],
     "shifting": [<row 0-2>, <col 0-2>],
-    "nash_reasoning": "1-2 sentences: which cell is Nash and why neither side wants to deviate first",
-    "cell_changes": [
-      {{"cell": "row,col", "reason": "what today's news changed about this cell"}}
-    ]
+    "nash_reasoning": "1-2 sentences on why this is the stable cell",
+    "cell_changes": [{{"cell": "row,col", "reason": "what news changed this cell"}}]
   }}
 }}
 
 Rules:
-- 🔴 = military action, strikes, casualties, weapons
-- 🟡 = political statements, threats, negotiations in doubt
-- 🟢 = diplomacy, ceasefire talks, de-escalation moves
-- Include 5-8 ticker_items covering today's key developments
-- Try to include at least one ticker item sourced from Iranian/Arab media if available
-- For each reasoning field: cite specific headlines or events you found, explain the logic clearly
-- When Western and non-Western sources contradict each other, note it in your reasoning
-- Count every distinct article or source you read for sources_count
-- Be honest about sources_quality: if news is sparse today, say so
-- Base probability estimates on the COMBINED picture from all sources, not just Western wire services
+- ticker: 🔴=military  🟡=political  🟢=diplomatic — include 5-8 items
+- tree: all 5 probabilities must sum to 100
+- actor_decisions: each side's 3 values must sum to 100
+- matrix rows: 0=US escalate, 1=US air+Hormuz, 2=US negotiate/exit
+- matrix cols: 0=Iran full escalate, 1=Iran attrit+block, 2=Iran accepts deal
+- payoff scale: -10 to +10 for each side in each cell
+- Nash cell = neither side gains by deviating unilaterally
+- Base all estimates on the combined picture from all 3 search rounds"""
 
-PAYOFF MATRIX INSTRUCTIONS:
-The matrix has 3 US strategies (rows) vs 3 Iran strategies (cols).
-Rows: 0=Escalate to ground war, 1=Continue air+Hormuz, 2=Negotiate/US exit
-Cols: 0=Iran full escalation (tri-axis), 1=Iran attrit+Hormuz block, 2=Iran accepts deal
-
-For each of the 9 cells score US payoff and Iran payoff on scale -10 to +10.
-Use these 4 factors from today's news to justify each value:
-
-  MILITARY COST: How many casualties, strikes, capability losses happened today?
-    → More violence = lower payoffs for escalation cells
-  ECONOMIC COST: What is oil price? Are sanctions biting? Are shipping routes blocked?
-    → Higher oil/disruption = lower payoffs across the board, especially for prolonged war
-  POLITICAL STANDING: What do allies, public opinion, and UN say today?
-    → More isolation = lower payoffs for aggressive cells
-  STRATEGIC POSITION: Who gained/lost territory or leverage today?
-    → Gains = higher payoff for that side's aggressive options
-
-Then find the Nash Equilibrium mathematically:
-  For each cell, ask: "If Iran plays THIS column, does US prefer a DIFFERENT row?"
-  And: "If US plays THIS row, does Iran prefer a DIFFERENT column?"
-  The Nash cell = where the answer is NO to both questions (neither side gains by moving first).
-
-The "shifting" cell = where both sides' incentives are currently pointing toward.
-
-CONFIDENCE RANGE INSTRUCTIONS:
-For each metric give a low (pessimistic) and high (optimistic) estimate.
-The range should reflect genuine uncertainty — if news is mixed, widen the range.
-Example: if ceasefire looks like 18% but could be anywhere 12–25% depending on Trump's speech tonight → low=12, high=25.
-
-PROBABILITY TREE INSTRUCTIONS:
-5 top-level branches (index 0–4):
-  0 = Trump unilateral exit (baseline was 32%)
-  1 = War continues Apr–Jun (baseline was 36%)
-  2 = Negotiated ceasefire (baseline was 20%)
-  3 = Regime collapse (baseline was 7%)
-  4 = Nuclear / Black Swan (baseline was 5%)
-All 5 must sum to 100. Update each based on today's news. The note should cite a specific headline.
-
-ACTOR DECISION INSTRUCTIONS:
-US decisions: Withdraw / Negotiate / Escalate — must sum to 100.
-Iran decisions: Escalate / Attrit / Negotiate — must sum to 100.
-Base on today's signals: Trump statements, IRGC actions, diplomatic moves.
-
-TIMELINE EVENT INSTRUCTIONS:
-Create ONE new timeline entry summarising today's single most important development.
-Use today's ceasefire_pct, escalation, ground_war_pct values you already calculated.
-Set hot=true only if this is a major turning point (major attack, ceasefire breakthrough, new country enters war)."""
+    # cache_control marks this as cacheable — continuation passes pay 90% less
+    messages = [{
+        "role": "user",
+        "content": [{"type": "text", "text": static_prompt,
+                     "cache_control": {"type": "ephemeral"}}]
     }]
 
-    # Accumulate token usage across all API calls in this update
     total_input_tokens  = 0
     total_output_tokens = 0
-    container_id        = None   # required when resuming after pause_turn
+    total_cache_write   = 0
+    total_cache_read    = 0
+    container_id        = None
 
-    # Loop to handle pause_turn (server-side tool iteration limit)
-    for iteration in range(5):
-        # Build API call kwargs — add container_id on continuation passes
+    for iteration in range(3):   # max 3 passes — was 5
         call_kwargs = dict(
-            model="claude-opus-4-6",
-            max_tokens=4000,
+            model=MODEL,
+            max_tokens=2000,     # was 4000 — output JSON needs ~1200 tokens max
             tools=[{"type": "web_search_20260209", "name": "web_search"}],
             messages=messages,
+            extra_headers={"anthropic-beta": "prompt-caching-2024-07-31"},
         )
         if container_id:
             call_kwargs["container_id"] = container_id
 
         response = client.messages.create(**call_kwargs)
 
-        # Accumulate token counts from every API call
+        # Accumulate all token types
         total_input_tokens  += response.usage.input_tokens
         total_output_tokens += response.usage.output_tokens
+        total_cache_write   += getattr(response.usage, "cache_creation_input_tokens", 0)
+        total_cache_read    += getattr(response.usage, "cache_read_input_tokens", 0)
+
+        # ── Budget guard — check after every API call ─────────────────────────
+        running_cost = (
+            total_input_tokens  / 1_000_000 * PRICE_INPUT  +
+            total_cache_write   / 1_000_000 * PRICE_CACHE_W +
+            total_cache_read    / 1_000_000 * PRICE_CACHE_R +
+            total_output_tokens / 1_000_000 * PRICE_OUTPUT
+        )
+        if running_cost > BUDGET_LIMIT:
+            print(f"  🛑 Budget cap ${BUDGET_LIMIT:.2f} reached "
+                  f"(${running_cost:.2f} spent so far) — stopping to protect credits")
+            return None
 
         if response.stop_reason == "end_turn":
-            # Print token usage & estimated cost
-            # Opus 4.6 pricing: $5.00 / 1M input tokens, $25.00 / 1M output tokens
-            cost_input  = total_input_tokens  / 1_000_000 * 5.00
-            cost_output = total_output_tokens / 1_000_000 * 25.00
-            cost_total  = cost_input + cost_output
-            print(f"  🔢 Tokens used  : {total_input_tokens:,} input  +  {total_output_tokens:,} output")
-            print(f"  💰 Est. cost    : ${cost_total:.4f}  (${cost_input:.4f} in + ${cost_output:.4f} out)")
+            # Print full token & cost breakdown
+            cost_input   = total_input_tokens  / 1_000_000 * PRICE_INPUT
+            cost_cache_w = total_cache_write   / 1_000_000 * PRICE_CACHE_W
+            cost_cache_r = total_cache_read    / 1_000_000 * PRICE_CACHE_R
+            cost_output  = total_output_tokens / 1_000_000 * PRICE_OUTPUT
+            cost_total   = cost_input + cost_cache_w + cost_cache_r + cost_output
+
+            print(f"  🔢 Tokens  : {total_input_tokens:,} input"
+                  + (f"  |  {total_cache_write:,} cache-write"  if total_cache_write else "")
+                  + (f"  |  {total_cache_read:,} cache-read"    if total_cache_read  else "")
+                  + f"  |  {total_output_tokens:,} output")
+            print(f"  💰 Cost    : ${cost_total:.4f}  "
+                  f"(model: {MODEL.split('-')[2]})")
 
             # Extract JSON from the final text response
             for block in response.content:
                 if block.type == "text" and block.text.strip():
                     text = block.text.strip()
-                    # Strip markdown code fences if Claude added them
                     text = re.sub(r'^```(?:json)?\s*', '', text)
-                    text = re.sub(r'\s*```$', '', text)
-                    # Try direct parse first
+                    text = re.sub(r'\s*```$',          '', text)
                     try:
                         return json.loads(text)
                     except json.JSONDecodeError:
                         pass
-                    # Fall back to extracting JSON from surrounding text
                     match = re.search(r'\{[\s\S]*\}', text)
                     if match:
                         try:
@@ -278,16 +220,13 @@ Set hot=true only if this is a major turning point (major attack, ceasefire brea
             return None
 
         elif response.stop_reason == "pause_turn":
-            # Server-side tool hit iteration limit — extract container_id and re-send
             messages.append({"role": "assistant", "content": response.content})
-            # The API requires container_id on the next call when tools are pending
-            raw_container = getattr(response, "container", None)
-            if raw_container is not None:
-                container_id = getattr(raw_container, "id", raw_container)
-            print(f"  ⏳ Continuing search (pass {iteration + 2})...")
+            raw = getattr(response, "container", None)
+            if raw is not None:
+                container_id = getattr(raw, "id", raw)
+            print(f"  ⏳ Continuing search (pass {iteration + 2}/3)...")
 
         else:
-            # Unexpected stop reason — append and retry
             messages.append({"role": "assistant", "content": response.content})
 
     print("  ⚠️  Reached max iterations without a final response")
