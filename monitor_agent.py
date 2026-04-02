@@ -226,15 +226,21 @@ Set hot=true only if this is a major turning point (major attack, ceasefire brea
     # Accumulate token usage across all API calls in this update
     total_input_tokens  = 0
     total_output_tokens = 0
+    container_id        = None   # required when resuming after pause_turn
 
     # Loop to handle pause_turn (server-side tool iteration limit)
     for iteration in range(5):
-        response = client.messages.create(
+        # Build API call kwargs — add container_id on continuation passes
+        call_kwargs = dict(
             model="claude-opus-4-6",
             max_tokens=4000,
             tools=[{"type": "web_search_20260209", "name": "web_search"}],
-            messages=messages
+            messages=messages,
         )
+        if container_id:
+            call_kwargs["container_id"] = container_id
+
+        response = client.messages.create(**call_kwargs)
 
         # Accumulate token counts from every API call
         total_input_tokens  += response.usage.input_tokens
@@ -272,8 +278,12 @@ Set hot=true only if this is a major turning point (major attack, ceasefire brea
             return None
 
         elif response.stop_reason == "pause_turn":
-            # Server-side tool hit iteration limit — re-send to continue
+            # Server-side tool hit iteration limit — extract container_id and re-send
             messages.append({"role": "assistant", "content": response.content})
+            # The API requires container_id on the next call when tools are pending
+            raw_container = getattr(response, "container", None)
+            if raw_container is not None:
+                container_id = getattr(raw_container, "id", raw_container)
             print(f"  ⏳ Continuing search (pass {iteration + 2})...")
 
         else:
