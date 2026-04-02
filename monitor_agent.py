@@ -45,18 +45,34 @@ RSS_FEEDS = [
     ("FT",           "https://www.ft.com/rss/home"),
 ]
 
-# Keywords to filter for Iran-relevant articles
-IRAN_KEYWORDS = [
-    "iran", "tehran", "irgc", "hormuz", "persian gulf",
-    "trump", "ceasefire", "nuclear", "houthi", "hezbollah",
-    "israel", "middle east", "war", "oil", "sanctions",
-    "strait", "missile", "attack", "drone"
+# Must match at least ONE primary keyword to be considered Iran-relevant
+IRAN_PRIMARY = ["iran", "tehran", "irgc", "hormuz", "persian gulf", "strait of hormuz"]
+# Secondary keywords — article must also match one of these (or a primary)
+IRAN_SECONDARY = [
+    "ceasefire", "nuclear", "houthi", "hezbollah", "missile", "drone",
+    "strike", "sanctions", "escalation", "war", "trump iran",
+    "oil price", "brent", "proxy", "axis"
 ]
+RSS_MAX_ARTICLES = 25  # cap to control prompt size (~750 tokens max)
+
+def _parse_rss_date(date_str: str) -> datetime | None:
+    """Try common RSS date formats, return UTC datetime or None."""
+    for fmt in [
+        "%a, %d %b %Y %H:%M:%S %z",   # RFC 822: "Mon, 02 Apr 2026 14:30:00 +0000"
+        "%a, %d %b %Y %H:%M:%S",       # without timezone
+        "%Y-%m-%dT%H:%M:%S%z",         # ISO 8601
+        "%Y-%m-%dT%H:%M:%SZ",          # ISO 8601 UTC
+    ]:
+        try:
+            return datetime.strptime(date_str.strip(), fmt).replace(tzinfo=timezone.utc)
+        except (ValueError, AttributeError):
+            continue
+    return None
 
 def fetch_rss() -> str:
     """
     Fetch WSJ, NYT, FT RSS feeds and return a formatted string of
-    Iran-relevant headlines from the last 24 hours.
+    Iran-relevant headlines from the last 36 hours.
     No API cost — pure HTTP fetch using Python built-ins.
     """
     cutoff = datetime.now(timezone.utc) - timedelta(hours=36)
@@ -89,25 +105,33 @@ def fetch_rss() -> str:
                 if desc_el is not None and desc_el.text:
                     desc = re.sub(r"<[^>]+>", "", desc_el.text).strip()[:200]
 
-                # Get pub date
+                # Get pub date and filter by recency
                 date_el = item.find("pubDate") or item.find("published") or item.find("updated")
-                pub_date = date_el.text.strip() if date_el is not None and date_el.text else ""
+                pub_date_str = date_el.text.strip() if date_el is not None and date_el.text else ""
+                pub_dt = _parse_rss_date(pub_date_str)
+                if pub_dt and pub_dt < cutoff:
+                    continue  # skip articles older than 36 hours
 
-                # Filter: must contain at least one Iran-related keyword
+                # Filter: must match at least one PRIMARY Iran keyword
                 combined = (title + " " + desc).lower()
-                if not any(kw in combined for kw in IRAN_KEYWORDS):
+                has_primary = any(kw in combined for kw in IRAN_PRIMARY)
+                if not has_primary:
                     continue
 
                 results.append(f"[{feed_name}] {title} — {desc}")
                 feed_count += 1
 
-            feed_stats.append(f"{feed_name}: {feed_count} articles")
+            feed_stats.append(f"{feed_name}: {feed_count}")
 
         except Exception as e:
             feed_stats.append(f"{feed_name}: failed ({type(e).__name__})")
 
     if not results:
         return ""
+
+    # Cap at RSS_MAX_ARTICLES to control prompt token usage
+    if len(results) > RSS_MAX_ARTICLES:
+        results = results[:RSS_MAX_ARTICLES]
 
     header = (f"=== PREMIUM RSS FEEDS ({len(results)} Iran-relevant articles) ===\n"
               f"Sources: {' | '.join(feed_stats)}\n\n")
@@ -122,11 +146,11 @@ def fetch_latest(client: anthropic.Anthropic) -> dict | None:
     structured JSON with updated probabilities and headlines.
 
     Cost controls:
-      - Uses Haiku (6× cheaper than Opus)
-      - Prompt caching on static instructions (90% cheaper on continuation passes)
+      - RSS pre-fetch (free) reduces reliance on paid web search
       - Hard budget cap: aborts if BUDGET_LIMIT is reached mid-run
-      - Max 3 loop passes (was 5)
-      - Max 2000 output tokens (was 4000)
+      - Max 3 loop passes, max 2000 output tokens
+      - Skips web search round 1 when RSS already has ample coverage
+      - Retry on transient API errors (500/429)
     """
     today    = datetime.now().strftime("%B %d, %Y")
     time_now = datetime.now().strftime("%H:%M UTC")
@@ -141,25 +165,49 @@ def fetch_latest(client: anthropic.Anthropic) -> dict | None:
 
     print(f"  🔍 Searching for latest US-Iran developments...")
 
-    rss_section = (
-        f"\n\nPREMIUM RSS CONTENT (WSJ / NYT / FT — already fetched, no need to search these sites):\n"
-        + rss_content
-        + "\n\nUse the above RSS articles as your primary premium source. "
-          "Then run 3 web searches for perspectives not covered above:\n"
-        if rss_content else
-        "\n\nNo RSS content available today — rely fully on web searches.\n"
-          "Run 3 web searches for balanced coverage:\n"
-    )
+    rss_article_count = rss_content.count("\n•") if rss_content else 0
+    has_ample_rss = rss_article_count >= 10
+
+    if rss_content and has_ample_rss:
+        search_instructions = (
+            f"\n\nPREMIUM RSS CONTENT (WSJ / NYT / FT — already fetched, DO NOT search these sites):\n"
+            + rss_content
+            + "\n\nYou already have strong Western coverage from the RSS above. "
+              "Now run ONLY 2 web searches for perspectives NOT covered:\n"
+              "  1. Iranian + Arab media: \"Iran war\" — nournews.ir or irna.ir (Iranian view) + "
+              "palestinechronicle.com or middleeasteye.net (Arab/Palestinian)\n"
+              "  2. Israeli + financial: \"Iran attack\" — timesofisrael.com or haaretz.com + "
+              "oil/sanctions on bloomberg.com or cnbc.com\n"
+              "\n2 searches is enough — do not do more."
+        )
+    elif rss_content:
+        search_instructions = (
+            f"\n\nPREMIUM RSS CONTENT (WSJ / NYT / FT — already fetched):\n"
+            + rss_content
+            + "\n\nRSS coverage is thin today. Run 3 web searches for full coverage:\n"
+              "  1. Wire services: \"Iran US war\" — reuters.com, apnews.com, bbc.com, aljazeera.com\n"
+              "  2. Iranian + Arab media: \"Iran war\" — nournews.ir or irna.ir + "
+              "palestinechronicle.com or middleeasteye.net\n"
+              "  3. Israeli + financial: \"Iran attack\" — timesofisrael.com or haaretz.com + "
+              "bloomberg.com or cnbc.com\n"
+              "\n3 searches is enough — do not do more."
+        )
+    else:
+        search_instructions = (
+            "\n\nNo RSS content available today — rely fully on web searches.\n"
+            "Run 3 web searches for balanced coverage:\n"
+            "  1. Wire services: \"Iran US war\" — reuters.com, apnews.com, bbc.com, aljazeera.com\n"
+            "  2. Iranian + Arab media: \"Iran war\" — nournews.ir or irna.ir + "
+            "palestinechronicle.com or middleeasteye.net\n"
+            "  3. Israeli + financial: \"Iran attack\" — timesofisrael.com or haaretz.com + "
+            "bloomberg.com or cnbc.com\n"
+            "\n3 searches is enough — do not do more."
+        )
 
     static_prompt = f"""Today is {today} at {time_now}.
-{rss_section}
-Search for the most recent US-Iran war news from the last 24 hours.
-Run 3 targeted searches for balanced multi-perspective coverage:
-  1. Wire services: "Iran US war {today}" — reuters.com, apnews.com, bbc.com, aljazeera.com
-  2. Regional media: "Iran war" — nournews.ir or irna.ir (Iranian view) + palestinechronicle.com or middleeasteye.net (Arab/Palestinian)
-  3. Israeli + financial: "Iran attack" — timesofisrael.com or haaretz.com + oil/sanctions on bloomberg.com or cnbc.com
+{search_instructions}
 
-Read actual articles, not just headlines. Note any discrepancies between sources. 3 searches is enough — do not do more.
+Read actual articles, not just headlines. Note any discrepancies between sources.
 
 Return ONLY a valid JSON object (no markdown, no explanation):
 {{
@@ -254,7 +302,17 @@ Rules:
         if container_id:
             call_kwargs["container_id"] = container_id
 
-        response = client.messages.create(**call_kwargs)
+        # Retry once on transient server errors (500/529) or rate limits (429)
+        try:
+            response = client.messages.create(**call_kwargs)
+        except (anthropic.InternalServerError, anthropic.RateLimitError) as e:
+            print(f"  ⚠️  API error: {e} — retrying in 10 seconds...")
+            time.sleep(10)
+            try:
+                response = client.messages.create(**call_kwargs)
+            except Exception as e2:
+                print(f"  ✗ Retry failed: {e2}")
+                return None
 
         # Accumulate token counts
         total_input_tokens  += response.usage.input_tokens
@@ -276,9 +334,7 @@ Rules:
             cost_total  = cost_input + cost_output
 
             print(f"  🔢 Tokens  : {total_input_tokens:,} input  |  {total_output_tokens:,} output")
-            print(f"  💰 Cost    : ${cost_total:.4f}")
-            print(f"  💰 Cost    : ${cost_total:.4f}  "
-                  f"(model: {MODEL.split('-')[2]})")
+            print(f"  💰 Cost    : ${cost_total:.4f}  ({MODEL})")
 
             # Extract JSON from the final text response
             for block in response.content:
@@ -296,7 +352,12 @@ Rules:
                             return json.loads(match.group())
                         except json.JSONDecodeError:
                             pass
-            print("  ⚠️  Response received but could not parse JSON")
+            # Save raw response for debugging
+            debug_file = Path("debug_last_response.txt")
+            raw_texts = [b.text for b in response.content if b.type == "text"]
+            debug_file.write_text("\n---\n".join(raw_texts), encoding="utf-8")
+            print(f"  ⚠️  Response received but could not parse JSON")
+            print(f"     Raw response saved to {debug_file} for debugging")
             return None
 
         elif response.stop_reason == "pause_turn":
@@ -304,7 +365,10 @@ Rules:
             raw = getattr(response, "container", None)
             if raw is not None:
                 container_id = getattr(raw, "id", raw)
-            print(f"  ⏳ Continuing search (pass {iteration + 2}/3)...")
+                print(f"  ⏳ Continuing search (pass {iteration + 2}/3, container={container_id[:12] if isinstance(container_id, str) else container_id}...)")
+            else:
+                print(f"  ⚠️  pause_turn but no container_id found — next call may fail")
+                print(f"  ⏳ Continuing search (pass {iteration + 2}/3)...")
 
         else:
             messages.append({"role": "assistant", "content": response.content})
@@ -324,8 +388,16 @@ def build_updated_html(data: dict) -> str:
     html = SOURCE_HTML.read_text(encoding="utf-8")
     now = datetime.now()
 
-    # Safely encode data as JSON for embedding in JavaScript
-    data_json = json.dumps(data, ensure_ascii=False)
+    # Only embed fields the JavaScript actually uses — strip analysis-only fields
+    frontend_keys = [
+        "ceasefire_pct", "ceasefire_delta",
+        "escalation", "escalation_delta",
+        "ground_war_pct", "ground_war_delta",
+        "ticker_items", "confidence",
+        "tree", "actor_decisions", "timeline_event", "matrix",
+    ]
+    frontend_data = {k: data[k] for k in frontend_keys if k in data}
+    data_json = json.dumps(frontend_data, ensure_ascii=False)
 
     update_script = f"""
 <!-- ═══ Auto-injected by US-Iran Monitor Agent · {now.isoformat()} ═══ -->
