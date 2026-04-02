@@ -27,12 +27,12 @@ SOURCE_HTML = Path("us_iran_war_game_theory_monitor_day34.html")
 OUTPUT_HTML = Path("us_iran_monitor_live.html")
 
 # ── Model & pricing (edit here if Anthropic changes rates) ────────────────────
-MODEL         = "claude-3-5-sonnet-20241022"  # supports web search, ~40% cheaper than Opus
-PRICE_INPUT   = 3.00   # USD per 1M input tokens
-PRICE_CACHE_W = 3.75   # USD per 1M cache-write tokens
-PRICE_CACHE_R = 0.30   # USD per 1M cache-read tokens (90% cheaper than normal)
-PRICE_OUTPUT  = 15.00  # USD per 1M output tokens
-BUDGET_LIMIT  = 1.80   # USD — hard abort to protect credits; target is <$1/run
+MODEL         = "claude-opus-4-6"  # confirmed working; cost controlled by 3-round search + budget cap
+PRICE_INPUT   = 5.00   # USD per 1M input tokens
+PRICE_CACHE_W = 6.25   # USD per 1M cache-write tokens
+PRICE_CACHE_R = 0.50   # USD per 1M cache-read tokens (90% cheaper than normal)
+PRICE_OUTPUT  = 25.00  # USD per 1M output tokens
+BUDGET_LIMIT  = 2.00   # USD — hard abort to protect credits
 
 
 # ── Step 1: Fetch latest news & analysis via Claude + web search ──────────────
