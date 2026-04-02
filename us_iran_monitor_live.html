@@ -815,10 +815,10 @@ function attachTLFilterEvents() {
 render();
 </script>
 
-<!-- ═══ Auto-injected by US-Iran Monitor Agent · 2026-04-02T14:29:38.974525 ═══ -->
+<!-- ═══ Auto-injected by US-Iran Monitor Agent · 2026-04-02T19:17:26.161562 ═══ -->
 <script>
 (function() {
-  var data = {"ceasefire_pct": 12, "ceasefire_delta": "-2", "escalation": 78, "escalation_delta": "+5", "ground_war_pct": 14, "ground_war_delta": "+1", "ticker_items": ["🔴 US Central Command reports 12,300+ targets struck inside Iran since Operation Epic Fury began", "🔴 Iran launches new wave of missiles/drones at UAE, Bahrain, Kuwait, Israel; Kuwait airport fuel depot ablaze", "🔴 Israel strikes Tehran pharmaceutical plant and 15 weapons production sites", "🟡 Trump threatens to 'bring Iran back to Stone Ages' in 2-3 weeks; sets April 6 Hormuz deadline", "🟡 IRGC threatens to target 18 US tech firms including Apple, Google, Meta, Microsoft", "🟢 Iran's President Pezeshkian releases letter to American public suggesting diplomatic engagement possible", "🟢 UK convenes 35-nation virtual meeting on reopening Strait of Hormuz", "🟡 Trump floats NATO withdrawal over allied refusal to join Iran war"], "confidence": {"ceasefire_low": 6, "ceasefire_high": 20, "escalation_low": 70, "escalation_high": 88, "ground_war_low": 8, "ground_war_high": 22}, "tree": [{"index": 0, "probability": 30, "note": "Trump unilateral exit — declares victory, leaves Hormuz unresolved"}, {"index": 1, "probability": 38, "note": "War continues Apr-Jun — escalation-attrition cycle persists"}, {"index": 2, "probability": 14, "note": "Negotiated ceasefire — backchannel via Oman/Qatar emerges"}, {"index": 3, "probability": 10, "note": "Regime collapse — sustained bombing fractures Iranian command"}, {"index": 4, "probability": 8, "note": "Nuclear/Black Swan — Iran breakout attempt or WMD incident"}], "actor_decisions": {"us": {"Withdraw": 35, "Negotiate": 15, "Escalate": 50}, "iran": {"Escalate": 40, "Attrit": 45, "Negotiate": 15}}, "timeline_event": {"date": "Apr 2", "day": 31, "cf": 12, "es": 78, "gw": 14, "rg": 14, "event": "Trump threatens maximum destruction in 2-3 week endgame; Iran rejects ceasefire talks and launches new Gulf-wide missile/drone wave; UK convenes 35-nation Hormuz coalition", "hot": true}, "matrix": {"vals": [[[-7, -8], [-4, -6], [3, -9]], [[-3, -5], [-1, -3], [6, -4]], [[-5, 2], [-2, 4], [4, 5]]], "nash": [1, 1], "shifting": [0, 1], "nash_reasoning": "US air+Hormuz vs Iran attrit+block is the stable equilibrium: the US cannot gain by escalating further (domestic opposition at 60%, overstretched logistics) nor by exiting (loses Hormuz leverage), while Iran cannot gain by full escalation (invites total destruction) nor by negotiating (zero trust, regime survival concerns). Neither side benefits from unilateral deviation.", "cell_changes": [{"cell": "0,1", "reason": "Trump's 2-3 week maximum destruction threat and April 6 Hormuz deadline shift play toward row 0, making US escalate vs Iran attrition the emerging dynamic"}, {"cell": "2,2", "reason": "Pezeshkian's letter and UK 35-nation Hormuz meeting marginally improve mutual exit payoffs but remain insufficient to shift equilibrium"}]}};
+  var data = {"ceasefire_pct": 14, "ceasefire_delta": "+2", "escalation": 78, "escalation_delta": "+3", "ground_war_pct": 18, "ground_war_delta": "-1", "ticker_items": ["🔴 Heavy bombings across Tehran jolt war-weary residents", "🔴 B-52 bombers sent over Iran as US asserts air supremacy", "🔴 Israel strikes Tehran pharmaceutical plant claiming military link", "🔴 Trump shares video of bombing in Isfahan", "🟡 Trump claims Iran war success, offers no exit plan; says out in 2-3 weeks", "🟡 Trump says enriched uranium 'not a concern' — dismisses nuclear risk", "🟢 Iran's president sends letter to US public suggesting diplomatic engagement", "🟡 French prosecutors link foiled attack on American bank to pro-Iranian group"], "confidence": {"ceasefire_low": 8, "ceasefire_high": 22, "escalation_low": 68, "escalation_high": 85, "ground_war_low": 12, "ground_war_high": 26}, "tree": [{"index": 0, "probability": 25, "note": "Trump unilateral exit — declares victory, pulls out"}, {"index": 1, "probability": 40, "note": "War continues Apr-Jun — air campaign persists"}, {"index": 2, "probability": 15, "note": "Negotiated ceasefire — backchannel deal emerges"}, {"index": 3, "probability": 12, "note": "Regime collapse — internal fractures under bombing"}, {"index": 4, "probability": 8, "note": "Nuclear/Black Swan — nuclear escalation or Hormuz catastrophe"}], "actor_decisions": {"us": {"Withdraw": 30, "Negotiate": 15, "Escalate": 55}, "iran": {"Escalate": 30, "Attrit": 50, "Negotiate": 20}}, "timeline_event": {"date": "Apr 2", "day": 1, "cf": 14, "es": 78, "gw": 18, "rg": 14, "event": "Trump declares war a success with no exit plan while B-52s fly over Iran and heavy bombing continues across Tehran and Isfahan", "hot": true}, "matrix": {"vals": [[[-7, -8], [-4, -6], [3, -9]], [[-3, -5], [-1, -3], [6, -4]], [[-5, 2], [-2, 3], [4, 5]]], "nash": [1, 1], "shifting": [1, 0], "nash_reasoning": "US air+Hormuz campaign vs Iran attrit+block is stable: the US avoids ground commitment costs while maintaining pressure, and Iran avoids full escalation risks while imposing attrition costs. Neither side gains by unilaterally deviating — US escalation risks overextension, Iran full escalation risks regime destruction.", "cell_changes": [{"cell": "1,1", "reason": "B-52 overflights and continued Tehran bombing confirm US commitment to air-dominant strategy; Iran's Hormuz closure and proxy attacks confirm attrition posture"}, {"cell": "0,0", "reason": "French foiled pro-Iran bank attack and Israel's Tehran pharmaceutical strike raise the specter of mutual full escalation"}, {"cell": "2,2", "reason": "Iran president's letter to US public and Trump's 2-3 week exit claim slightly improve deal cell payoffs but remain improbable"}]}};
 
   // ── Update header stats ──────────────────────────────────────────────────
   var statDivs = document.querySelectorAll('.stat');
@@ -856,7 +856,7 @@ render();
   var sub = document.querySelector('.brand-sub');
   if (sub) {
     sub.textContent = 'LIVE — APR 02, 2026 '
-      + '14:29 UTC — AUTO-REFRESHED BY MONITOR AGENT';
+      + '19:17 UTC — AUTO-REFRESHED BY MONITOR AGENT';
   }
 
   // ── Update payoff matrix ─────────────────────────────────────────────────
@@ -880,7 +880,7 @@ render();
       nashBox.id = 'agent-nash-box';
       nashBox.style.cssText = 'margin:10px 20px;padding:12px;background:rgba(0,255,136,.03);border:1px solid rgba(0,255,136,.15);border-radius:7px;font-family:monospace';
       nashBox.innerHTML =
-        '<div style="font-size:.46rem;color:#00ff88;font-weight:700;letter-spacing:.1em;margin-bottom:6px">⚡ AGENT NASH ASSESSMENT — 14:29 UTC</div>' +
+        '<div style="font-size:.46rem;color:#00ff88;font-weight:700;letter-spacing:.1em;margin-bottom:6px">⚡ AGENT NASH ASSESSMENT — 19:17 UTC</div>' +
         '<div style="font-size:.5rem;color:rgba(255,255,255,.55);line-height:1.7">' + m.nash_reasoning + '</div>' +
         (m.cell_changes && m.cell_changes.length ?
           '<div style="margin-top:8px;font-size:.44rem;color:rgba(255,255,255,.3)">' +
@@ -962,7 +962,7 @@ render();
     'line-height:1.6'
   ].join(';');
   toast.innerHTML =
-    '✓ LIVE UPDATE &nbsp;14:29 UTC<br>' +
+    '✓ LIVE UPDATE &nbsp;19:17 UTC<br>' +
     '<span style="color:rgba(255,255,255,.4);font-size:.4rem">' +
     'Monitor agent refreshed</span>';
   document.body.appendChild(toast);
