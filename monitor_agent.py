@@ -158,7 +158,8 @@ Rules:
         call_kwargs = dict(
             model=MODEL,
             max_tokens=2000,     # was 4000 — output JSON needs ~1200 tokens max
-            tools=[{"type": "web_search_20260209", "name": "web_search"}],
+            tools=[{"type": "web_search_20260209", "name": "web_search",
+                    "allowed_callers": ["direct"]}],
             messages=messages,
             extra_headers={"anthropic-beta": "prompt-caching-2024-07-31"},
         )
