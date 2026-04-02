@@ -18,8 +18,10 @@ import json
 import re
 import subprocess
 import time
+import urllib.request
 import webbrowser
-from datetime import datetime
+import xml.etree.ElementTree as ET
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
 # ── File paths ────────────────────────────────────────────────────────────────
@@ -33,7 +35,86 @@ PRICE_OUTPUT  = 25.00  # USD per 1M output tokens
 BUDGET_LIMIT  = 2.00   # USD — hard abort to protect credits
 
 
-# ── Step 1: Fetch latest news & analysis via Claude + web search ──────────────
+# ── Step 1a: Fetch premium RSS feeds (WSJ, FT, NYT) ─────────────────────────
+
+RSS_FEEDS = [
+    ("WSJ World",    "https://feeds.a.dj.com/rss/RSSWorldNews.xml"),
+    ("WSJ Markets",  "https://feeds.a.dj.com/rss/RSSMarketsMain.xml"),
+    ("NYT World",    "https://rss.nytimes.com/services/xml/rss/nyt/World.xml"),
+    ("NYT MiddleEast","https://rss.nytimes.com/services/xml/rss/nyt/MiddleEast.xml"),
+    ("FT",           "https://www.ft.com/rss/home"),
+]
+
+# Keywords to filter for Iran-relevant articles
+IRAN_KEYWORDS = [
+    "iran", "tehran", "irgc", "hormuz", "persian gulf",
+    "trump", "ceasefire", "nuclear", "houthi", "hezbollah",
+    "israel", "middle east", "war", "oil", "sanctions",
+    "strait", "missile", "attack", "drone"
+]
+
+def fetch_rss() -> str:
+    """
+    Fetch WSJ, NYT, FT RSS feeds and return a formatted string of
+    Iran-relevant headlines from the last 24 hours.
+    No API cost — pure HTTP fetch using Python built-ins.
+    """
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=36)
+    results = []
+    feed_stats = []
+
+    for feed_name, url in RSS_FEEDS:
+        try:
+            req = urllib.request.Request(url, headers={
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                              "AppleWebKit/537.36 (KHTML, like Gecko) "
+                              "Chrome/120.0.0.0 Safari/537.36"
+            })
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                raw = resp.read()
+
+            root = ET.fromstring(raw)
+            ns   = {"atom": "http://www.w3.org/2005/Atom"}
+            items = root.findall(".//item") or root.findall(".//atom:entry", ns)
+
+            feed_count = 0
+            for item in items:
+                # Get title
+                title_el = item.find("title")
+                title = title_el.text.strip() if title_el is not None and title_el.text else ""
+
+                # Get description/summary
+                desc_el = item.find("description") or item.find("summary")
+                desc = ""
+                if desc_el is not None and desc_el.text:
+                    desc = re.sub(r"<[^>]+>", "", desc_el.text).strip()[:200]
+
+                # Get pub date
+                date_el = item.find("pubDate") or item.find("published") or item.find("updated")
+                pub_date = date_el.text.strip() if date_el is not None and date_el.text else ""
+
+                # Filter: must contain at least one Iran-related keyword
+                combined = (title + " " + desc).lower()
+                if not any(kw in combined for kw in IRAN_KEYWORDS):
+                    continue
+
+                results.append(f"[{feed_name}] {title} — {desc}")
+                feed_count += 1
+
+            feed_stats.append(f"{feed_name}: {feed_count} articles")
+
+        except Exception as e:
+            feed_stats.append(f"{feed_name}: failed ({type(e).__name__})")
+
+    if not results:
+        return ""
+
+    header = (f"=== PREMIUM RSS FEEDS ({len(results)} Iran-relevant articles) ===\n"
+              f"Sources: {' | '.join(feed_stats)}\n\n")
+    return header + "\n".join(f"• {r}" for r in results)
+
+
+# ── Step 1b: Fetch latest news & analysis via Claude + web search ─────────────
 
 def fetch_latest(client: anthropic.Anthropic) -> dict | None:
     """
@@ -50,11 +131,28 @@ def fetch_latest(client: anthropic.Anthropic) -> dict | None:
     today    = datetime.now().strftime("%B %d, %Y")
     time_now = datetime.now().strftime("%H:%M UTC")
 
+    print(f"  📰 Fetching premium RSS feeds (WSJ / NYT / FT)...")
+    rss_content = fetch_rss()
+    if rss_content:
+        line_count = rss_content.count("\n•")
+        print(f"  ✓ RSS: {line_count} Iran-relevant articles retrieved")
+    else:
+        print(f"  ⚠  RSS: no articles retrieved (feeds may be unavailable)")
+
     print(f"  🔍 Searching for latest US-Iran developments...")
 
-    # Static instructions — marked for caching so continuation passes cost 90% less
-    static_prompt = f"""Today is {today} at {time_now}.
+    rss_section = (
+        f"\n\nPREMIUM RSS CONTENT (WSJ / NYT / FT — already fetched, no need to search these sites):\n"
+        + rss_content
+        + "\n\nUse the above RSS articles as your primary premium source. "
+          "Then run 3 web searches for perspectives not covered above:\n"
+        if rss_content else
+        "\n\nNo RSS content available today — rely fully on web searches.\n"
+          "Run 3 web searches for balanced coverage:\n"
+    )
 
+    static_prompt = f"""Today is {today} at {time_now}.
+{rss_section}
 Search for the most recent US-Iran war news from the last 24 hours.
 Run 3 targeted searches for balanced multi-perspective coverage:
   1. Wire services: "Iran US war {today}" — reuters.com, apnews.com, bbc.com, aljazeera.com
@@ -82,6 +180,7 @@ Return ONLY a valid JSON object (no markdown, no explanation):
 
   "sources_count": <integer>,
   "sources_breakdown": {{
+    "premium_rss": <integer — articles from WSJ/NYT/FT RSS feeds>,
     "western": <integer>, "iranian": <integer>,
     "arab_palestinian": <integer>, "israeli": <integer>, "financial": <integer>
   }},
@@ -489,11 +588,14 @@ def run_update(client: anthropic.Anthropic, open_browser: bool = False) -> bool:
     quality_icon = {"GOOD": "🟢", "LIMITED": "🟡", "POOR": "🔴"}.get(quality, "⚪")
     print(f"\n  📰 News gathered : {count} articles  {quality_icon} Coverage: {quality}")
     if breakdown:
-        print(f"     └─ 🌐 Western: {breakdown.get('western',0)}  "
-              f"🇮🇷 Iranian: {breakdown.get('iranian',0)}  "
-              f"🕌 Arab/Palestinian: {breakdown.get('arab_palestinian',0)}  "
-              f"🇮🇱 Israeli: {breakdown.get('israeli',0)}  "
-              f"💹 Financial: {breakdown.get('financial',0)}")
+        rss_count = breakdown.get('premium_rss', 0)
+        if rss_count:
+            print(f"     └─ WSJ/NYT/FT RSS: {rss_count} premium articles")
+        print(f"     └─ Western: {breakdown.get('western',0)}  "
+              f"Iranian: {breakdown.get('iranian',0)}  "
+              f"Arab/Palestinian: {breakdown.get('arab_palestinian',0)}  "
+              f"Israeli: {breakdown.get('israeli',0)}  "
+              f"Financial: {breakdown.get('financial',0)}")
     if quality_reason:
         print(f"     └─ {quality_reason}")
     discrepancy = data.get("key_discrepancy", "")
