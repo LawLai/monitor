@@ -29,8 +29,6 @@ OUTPUT_HTML = Path("us_iran_monitor_live.html")
 # ── Model & pricing (edit here if Anthropic changes rates) ────────────────────
 MODEL         = "claude-opus-4-6"  # confirmed working; cost controlled by 3-round search + budget cap
 PRICE_INPUT   = 5.00   # USD per 1M input tokens
-PRICE_CACHE_W = 6.25   # USD per 1M cache-write tokens
-PRICE_CACHE_R = 0.50   # USD per 1M cache-read tokens (90% cheaper than normal)
 PRICE_OUTPUT  = 25.00  # USD per 1M output tokens
 BUDGET_LIMIT  = 2.00   # USD — hard abort to protect credits
 
@@ -141,43 +139,31 @@ Rules:
 - Nash cell = neither side gains by deviating unilaterally
 - Base all estimates on the combined picture from all 3 search rounds"""
 
-    # cache_control marks this as cacheable — continuation passes pay 90% less
-    messages = [{
-        "role": "user",
-        "content": [{"type": "text", "text": static_prompt,
-                     "cache_control": {"type": "ephemeral"}}]
-    }]
+    messages = [{"role": "user", "content": static_prompt}]
 
     total_input_tokens  = 0
     total_output_tokens = 0
-    total_cache_write   = 0
-    total_cache_read    = 0
     container_id        = None
 
     for iteration in range(3):   # max 3 passes — was 5
         call_kwargs = dict(
             model=MODEL,
-            max_tokens=2000,     # was 4000 — output JSON needs ~1200 tokens max
+            max_tokens=2000,     # was 4000 — JSON output needs ~1200 tokens max
             tools=[{"type": "web_search_20260209", "name": "web_search"}],
             messages=messages,
-            extra_headers={"anthropic-beta": "prompt-caching-2024-07-31"},
         )
         if container_id:
             call_kwargs["container_id"] = container_id
 
         response = client.messages.create(**call_kwargs)
 
-        # Accumulate all token types
+        # Accumulate token counts
         total_input_tokens  += response.usage.input_tokens
         total_output_tokens += response.usage.output_tokens
-        total_cache_write   += getattr(response.usage, "cache_creation_input_tokens", 0)
-        total_cache_read    += getattr(response.usage, "cache_read_input_tokens", 0)
 
         # ── Budget guard — check after every API call ─────────────────────────
         running_cost = (
             total_input_tokens  / 1_000_000 * PRICE_INPUT  +
-            total_cache_write   / 1_000_000 * PRICE_CACHE_W +
-            total_cache_read    / 1_000_000 * PRICE_CACHE_R +
             total_output_tokens / 1_000_000 * PRICE_OUTPUT
         )
         if running_cost > BUDGET_LIMIT:
@@ -186,17 +172,12 @@ Rules:
             return None
 
         if response.stop_reason == "end_turn":
-            # Print full token & cost breakdown
-            cost_input   = total_input_tokens  / 1_000_000 * PRICE_INPUT
-            cost_cache_w = total_cache_write   / 1_000_000 * PRICE_CACHE_W
-            cost_cache_r = total_cache_read    / 1_000_000 * PRICE_CACHE_R
-            cost_output  = total_output_tokens / 1_000_000 * PRICE_OUTPUT
-            cost_total   = cost_input + cost_cache_w + cost_cache_r + cost_output
+            cost_input  = total_input_tokens  / 1_000_000 * PRICE_INPUT
+            cost_output = total_output_tokens / 1_000_000 * PRICE_OUTPUT
+            cost_total  = cost_input + cost_output
 
-            print(f"  🔢 Tokens  : {total_input_tokens:,} input"
-                  + (f"  |  {total_cache_write:,} cache-write"  if total_cache_write else "")
-                  + (f"  |  {total_cache_read:,} cache-read"    if total_cache_read  else "")
-                  + f"  |  {total_output_tokens:,} output")
+            print(f"  🔢 Tokens  : {total_input_tokens:,} input  |  {total_output_tokens:,} output")
+            print(f"  💰 Cost    : ${cost_total:.4f}")
             print(f"  💰 Cost    : ${cost_total:.4f}  "
                   f"(model: {MODEL.split('-')[2]})")
 
