@@ -27,7 +27,7 @@ SOURCE_HTML = Path("us_iran_war_game_theory_monitor_day34.html")
 OUTPUT_HTML = Path("us_iran_monitor_live.html")
 
 # ── Model & pricing (edit here if Anthropic changes rates) ────────────────────
-MODEL         = "claude-sonnet-4-6"  # supports web search, ~40% cheaper than Opus
+MODEL         = "claude-sonnet-4-5-20251001"  # supports web search, ~40% cheaper than Opus
 PRICE_INPUT   = 3.00   # USD per 1M input tokens
 PRICE_CACHE_W = 3.75   # USD per 1M cache-write tokens
 PRICE_CACHE_R = 0.30   # USD per 1M cache-read tokens (90% cheaper than normal)
