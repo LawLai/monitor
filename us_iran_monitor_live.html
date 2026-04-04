@@ -815,10 +815,10 @@ function attachTLFilterEvents() {
 render();
 </script>
 
-<!-- ═══ Auto-injected by US-Iran Monitor Agent · 2026-04-02T19:17:26.161562 ═══ -->
+<!-- ═══ Auto-injected by US-Iran Monitor Agent · 2026-04-04T12:19:48.663039 ═══ -->
 <script>
 (function() {
-  var data = {"ceasefire_pct": 14, "ceasefire_delta": "+2", "escalation": 78, "escalation_delta": "+3", "ground_war_pct": 18, "ground_war_delta": "-1", "ticker_items": ["🔴 Heavy bombings across Tehran jolt war-weary residents", "🔴 B-52 bombers sent over Iran as US asserts air supremacy", "🔴 Israel strikes Tehran pharmaceutical plant claiming military link", "🔴 Trump shares video of bombing in Isfahan", "🟡 Trump claims Iran war success, offers no exit plan; says out in 2-3 weeks", "🟡 Trump says enriched uranium 'not a concern' — dismisses nuclear risk", "🟢 Iran's president sends letter to US public suggesting diplomatic engagement", "🟡 French prosecutors link foiled attack on American bank to pro-Iranian group"], "confidence": {"ceasefire_low": 8, "ceasefire_high": 22, "escalation_low": 68, "escalation_high": 85, "ground_war_low": 12, "ground_war_high": 26}, "tree": [{"index": 0, "probability": 25, "note": "Trump unilateral exit — declares victory, pulls out"}, {"index": 1, "probability": 40, "note": "War continues Apr-Jun — air campaign persists"}, {"index": 2, "probability": 15, "note": "Negotiated ceasefire — backchannel deal emerges"}, {"index": 3, "probability": 12, "note": "Regime collapse — internal fractures under bombing"}, {"index": 4, "probability": 8, "note": "Nuclear/Black Swan — nuclear escalation or Hormuz catastrophe"}], "actor_decisions": {"us": {"Withdraw": 30, "Negotiate": 15, "Escalate": 55}, "iran": {"Escalate": 30, "Attrit": 50, "Negotiate": 20}}, "timeline_event": {"date": "Apr 2", "day": 1, "cf": 14, "es": 78, "gw": 18, "rg": 14, "event": "Trump declares war a success with no exit plan while B-52s fly over Iran and heavy bombing continues across Tehran and Isfahan", "hot": true}, "matrix": {"vals": [[[-7, -8], [-4, -6], [3, -9]], [[-3, -5], [-1, -3], [6, -4]], [[-5, 2], [-2, 3], [4, 5]]], "nash": [1, 1], "shifting": [1, 0], "nash_reasoning": "US air+Hormuz campaign vs Iran attrit+block is stable: the US avoids ground commitment costs while maintaining pressure, and Iran avoids full escalation risks while imposing attrition costs. Neither side gains by unilaterally deviating — US escalation risks overextension, Iran full escalation risks regime destruction.", "cell_changes": [{"cell": "1,1", "reason": "B-52 overflights and continued Tehran bombing confirm US commitment to air-dominant strategy; Iran's Hormuz closure and proxy attacks confirm attrition posture"}, {"cell": "0,0", "reason": "French foiled pro-Iran bank attack and Israel's Tehran pharmaceutical strike raise the specter of mutual full escalation"}, {"cell": "2,2", "reason": "Iran president's letter to US public and Trump's 2-3 week exit claim slightly improve deal cell payoffs but remain improbable"}]}};
+  var data = {"ceasefire_pct": 8, "ceasefire_delta": "-2", "escalation": 82, "escalation_delta": "+5", "ground_war_pct": 12, "ground_war_delta": "+2", "ticker_items": ["🔴 Iran shoots down F-15E and A-10; one US crew member missing inside Iran, SAR underway", "🔴 US-Israeli strikes destroy B1 bridge (Tehran-Karaj), killing 8 and wounding 95 on Nature Day", "🔴 Iran fires missiles at Israel on Apr 4; one injured in Bnei Brak; Bahrain sirens activated", "🟡 Iran rejects US 48-hour ceasefire proposal; FM Araqchi denies any negotiations with Washington", "🟡 Trump fires Army Chief of Staff Gen. Randy George; Hegseth cites need for aligned leadership", "🟡 Trump issues April 6 ultimatum: reopen Strait of Hormuz or face strikes on energy infrastructure", "🟢 UK hosts multilateral talks on securing Strait of Hormuz; UN Security Council vote on Bahraini resolution pending", "🔴 Islamic Resistance in Iraq claims 19 operations against US bases in past 24 hours"], "confidence": {"ceasefire_low": 4, "ceasefire_high": 14, "escalation_low": 74, "escalation_high": 90, "ground_war_low": 7, "ground_war_high": 18}, "tree": [{"index": 0, "probability": 5, "note": "Trump unilateral exit — politically untenable with missing crew member"}, {"index": 1, "probability": 55, "note": "War continues Apr-Jun — attrition cycle locked in, neither side can concede"}, {"index": 2, "probability": 22, "note": "Negotiated ceasefire — possible only after April 6 deadline crisis resolves"}, {"index": 3, "probability": 10, "note": "Regime collapse — economic devastation real but IRGC cohesion holds"}, {"index": 4, "probability": 8, "note": "Nuclear/Black Swan — Iran rapidly repairing bunkers per US intel raises threshold"}], "actor_decisions": {"us": {"Withdraw": 5, "Negotiate": 25, "Escalate": 70}, "iran": {"Escalate": 35, "Attrit": 50, "Negotiate": 15}}, "timeline_event": {"date": "Apr 4", "day": 14, "cf": 8, "es": 82, "gw": 12, "rg": 14, "event": "Iran downs two US aircraft; rejects ceasefire; Trump sets April 6 energy infrastructure ultimatum", "hot": true}, "matrix": {"vals": [[[-6, -8], [-3, -6], [4, -9]], [[-4, -5], [-2, -3], [7, -4]], [[2, 6], [-1, 4], [3, 3]]], "nash": [1, 1], "shifting": [0, 1], "nash_reasoning": "At (1,1)—US air+Hormuz campaign vs Iran attrition+blockade—neither side gains by deviating: the US worsens its position by negotiating while a crew member is missing, and Iran cannot full-escalate without risking regime survival. This is the stable mutual punishment equilibrium.", "cell_changes": [{"cell": "0,1", "reason": "Trump's April 6 ultimatum and firing of Army CoS signal shift toward row 0 (full escalation) against Iran's attrition strategy"}, {"cell": "1,2", "reason": "Iran's explicit rejection of ceasefire makes column 2 (deal) less reachable, reducing US payoff expectation from current air campaign"}, {"cell": "0,0", "reason": "Iran's downing of two aircraft raises cost of full US escalation, worsening both payoffs in mutual escalation cell"}]}};
 
   // ── Update header stats ──────────────────────────────────────────────────
   var statDivs = document.querySelectorAll('.stat');
@@ -855,8 +855,8 @@ render();
   // ── Update subtitle bar ──────────────────────────────────────────────────
   var sub = document.querySelector('.brand-sub');
   if (sub) {
-    sub.textContent = 'LIVE — APR 02, 2026 '
-      + '19:17 UTC — AUTO-REFRESHED BY MONITOR AGENT';
+    sub.textContent = 'LIVE — APR 04, 2026 '
+      + '12:19 UTC — AUTO-REFRESHED BY MONITOR AGENT';
   }
 
   // ── Update payoff matrix ─────────────────────────────────────────────────
@@ -880,7 +880,7 @@ render();
       nashBox.id = 'agent-nash-box';
       nashBox.style.cssText = 'margin:10px 20px;padding:12px;background:rgba(0,255,136,.03);border:1px solid rgba(0,255,136,.15);border-radius:7px;font-family:monospace';
       nashBox.innerHTML =
-        '<div style="font-size:.46rem;color:#00ff88;font-weight:700;letter-spacing:.1em;margin-bottom:6px">⚡ AGENT NASH ASSESSMENT — 19:17 UTC</div>' +
+        '<div style="font-size:.46rem;color:#00ff88;font-weight:700;letter-spacing:.1em;margin-bottom:6px">⚡ AGENT NASH ASSESSMENT — 12:19 UTC</div>' +
         '<div style="font-size:.5rem;color:rgba(255,255,255,.55);line-height:1.7">' + m.nash_reasoning + '</div>' +
         (m.cell_changes && m.cell_changes.length ?
           '<div style="margin-top:8px;font-size:.44rem;color:rgba(255,255,255,.3)">' +
@@ -962,7 +962,7 @@ render();
     'line-height:1.6'
   ].join(';');
   toast.innerHTML =
-    '✓ LIVE UPDATE &nbsp;19:17 UTC<br>' +
+    '✓ LIVE UPDATE &nbsp;12:19 UTC<br>' +
     '<span style="color:rgba(255,255,255,.4);font-size:.4rem">' +
     'Monitor agent refreshed</span>';
   document.body.appendChild(toast);
