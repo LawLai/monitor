@@ -1,0 +1,1372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brazil 2026 Election Monitor</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#x1F1E7;&#x1F1F7;</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0d1117;
+  --card: #161b22;
+  --card-hover: #1c2129;
+  --border: #30363d;
+  --text-primary: #e6edf3;
+  --text-secondary: #8b949e;
+  --text-muted: #656d76;
+  --accent-blue: #58a6ff;
+  --accent-green: #3fb950;
+  --accent-amber: #d29922;
+  --accent-red: #f85149;
+  --lula: #d32f2f;
+  --flavio: #1565c0;
+  --caiado: #f9a825;
+  --santos: #7c4dff;
+  --radius: 8px;
+  --radius-lg: 12px;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg);
+  color: var(--text-primary);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+.container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+/* Header */
+.header {
+  background: linear-gradient(180deg, #161b22 0%, var(--bg) 100%);
+  border-bottom: 1px solid var(--border);
+  padding: 20px 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(12px);
+}
+.header-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.header-left h1 {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: var(--text-primary);
+}
+.header-left .subtitle {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 400;
+  margin-top: 2px;
+}
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.header-meta span { white-space: nowrap; }
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  background: rgba(210, 153, 34, 0.15);
+  color: var(--accent-amber);
+  border: 1px solid rgba(210, 153, 34, 0.3);
+}
+.status-pill .dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--accent-amber);
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* Sections */
+.section { margin: 32px 0; }
+.section-title {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* Cards */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  transition: border-color 0.2s;
+}
+.card:hover { border-color: #444c56; }
+
+/* Grid layouts */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+
+/* Hero Section */
+.hero-winning .leader-name {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.hero-winning .leader-party {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+}
+.matchup-bar {
+  display: flex;
+  height: 32px;
+  border-radius: 6px;
+  overflow: hidden;
+  margin: 8px 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+.matchup-bar > div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  transition: width 0.6s ease;
+}
+.matchup-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+.polymarket-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.poly-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.poly-chip .val { font-weight: 600; color: var(--text-primary); }
+
+/* Risk items */
+.risk-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(48,54,61,0.5);
+}
+.risk-item:last-child { border-bottom: none; }
+.risk-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  margin-top: 6px;
+  flex-shrink: 0;
+}
+.risk-dot.red { background: var(--accent-red); }
+.risk-dot.amber { background: var(--accent-amber); }
+.risk-dot.green { background: var(--accent-green); }
+.risk-text { font-size: 13px; line-height: 1.5; }
+.risk-label { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+/* Progress bars */
+.progress-track {
+  height: 24px;
+  background: rgba(48,54,61,0.5);
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+}
+.progress-fill {
+  height: 100%;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  padding-left: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+  transition: width 0.8s ease;
+}
+.progress-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 4px;
+  padding: 0 2px;
+}
+
+/* Mini progress */
+.mini-progress-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 8px 0;
+}
+.mini-progress-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  width: 160px;
+  flex-shrink: 0;
+}
+.mini-progress-track {
+  flex: 1;
+  height: 8px;
+  background: rgba(48,54,61,0.5);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.mini-progress-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.6s ease;
+}
+.mini-progress-val {
+  font-size: 12px;
+  font-weight: 600;
+  width: 40px;
+  text-align: right;
+}
+
+/* Consolidation status */
+.consol-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  margin: 12px 0;
+}
+.consol-delta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin: 8px 0 16px 0;
+}
+.consol-delta .arrow { font-size: 16px; }
+
+/* Polling bars */
+.poll-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 10px 0;
+}
+.poll-name {
+  width: 100px;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: right;
+  flex-shrink: 0;
+}
+.poll-bar-track {
+  flex: 1;
+  height: 28px;
+  background: rgba(48,54,61,0.3);
+  border-radius: 6px;
+  overflow: hidden;
+  position: relative;
+}
+.poll-bar-fill {
+  height: 100%;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  padding-left: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+}
+.poll-delta {
+  font-size: 11px;
+  width: 60px;
+  text-align: left;
+  flex-shrink: 0;
+}
+.delta-up { color: var(--accent-green); }
+.delta-down { color: var(--accent-red); }
+.delta-flat { color: var(--text-muted); }
+
+/* Approval bar */
+.approval-bar {
+  display: flex;
+  height: 28px;
+  border-radius: 6px;
+  overflow: hidden;
+  margin: 8px 0;
+}
+.approval-bar > div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+}
+
+/* Footnote */
+.footnote {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(48,54,61,0.5);
+}
+
+/* Chart containers */
+.chart-container {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+}
+.chart-container h3 {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+.chart-wrapper { position: relative; height: 260px; }
+
+/* Tables */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.data-table th {
+  text-align: left;
+  padding: 10px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+}
+.data-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(48,54,61,0.4);
+  color: var(--text-secondary);
+}
+.data-table tr:hover td { background: rgba(48,54,61,0.2); }
+
+/* Badges */
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+.badge-green { background: rgba(63,185,80,0.15); color: var(--accent-green); }
+.badge-amber { background: rgba(210,153,34,0.15); color: var(--accent-amber); }
+.badge-red { background: rgba(248,81,73,0.15); color: var(--accent-red); }
+.badge-gray { background: rgba(139,148,158,0.15); color: var(--text-secondary); }
+.badge-blue { background: rgba(88,166,255,0.15); color: var(--accent-blue); }
+
+/* Economic indicators */
+.econ-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 12px;
+}
+.econ-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  text-align: center;
+}
+.econ-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+.econ-value {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.econ-change {
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+.econ-status {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+/* Event log */
+.event-item {
+  display: flex;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(48,54,61,0.4);
+  font-size: 13px;
+}
+.event-item:last-child { border-bottom: none; }
+.event-date {
+  color: var(--text-muted);
+  font-size: 12px;
+  width: 80px;
+  flex-shrink: 0;
+  font-weight: 500;
+}
+.event-desc { flex: 1; color: var(--text-secondary); }
+.event-tags { display: flex; gap: 6px; flex-shrink: 0; }
+.event-tag {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(88,166,255,0.1);
+  color: var(--accent-blue);
+}
+
+/* Timeline */
+.timeline-bar {
+  display: flex;
+  align-items: center;
+  background: rgba(48,54,61,0.3);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-top: 16px;
+  position: relative;
+  overflow: hidden;
+}
+.timeline-track {
+  flex: 1;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  position: relative;
+}
+.timeline-fill {
+  position: absolute;
+  left: 0; top: 0;
+  height: 100%;
+  background: var(--accent-blue);
+  border-radius: 2px;
+}
+.timeline-marker {
+  position: absolute;
+  top: -6px;
+  width: 16px; height: 16px;
+  background: var(--accent-blue);
+  border: 2px solid var(--bg);
+  border-radius: 50%;
+  transform: translateX(-50%);
+}
+.timeline-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+/* Scenario bars */
+.scenario-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 10px 0;
+}
+.scenario-label {
+  width: 140px;
+  font-size: 13px;
+  text-align: right;
+  flex-shrink: 0;
+}
+.scenario-track {
+  flex: 1;
+  height: 24px;
+  background: rgba(48,54,61,0.3);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.scenario-fill {
+  height: 100%;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  padding-left: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+}
+.scenario-meta {
+  font-size: 11px;
+  color: var(--text-muted);
+  width: 100px;
+  flex-shrink: 0;
+}
+
+/* Watch list */
+.watch-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(48,54,61,0.4);
+}
+.watch-item:last-child { border-bottom: none; }
+.watch-num {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: rgba(88,166,255,0.15);
+  color: var(--accent-blue);
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Narrative table */
+.narrative-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.narrative-status .arrow-up { color: var(--accent-red); }
+.narrative-status .stable { color: var(--accent-green); }
+.narrative-status .arrow-down { color: var(--accent-blue); }
+.narrative-status .new-tag { color: var(--accent-amber); }
+
+/* About section */
+.about-section {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 32px;
+  margin-top: 32px;
+}
+.about-section h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: var(--text-primary);
+}
+.about-section h4 {
+  font-size: 13px;
+  font-weight: 600;
+  margin: 20px 0 8px 0;
+  color: var(--text-secondary);
+}
+.about-section p, .about-section li {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+.about-section ul {
+  padding-left: 20px;
+  margin: 8px 0;
+}
+.about-section li { margin: 4px 0; }
+.disclaimer {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 24px 0 32px 0;
+  border-top: 1px solid var(--border);
+  margin-top: 32px;
+}
+
+/* Signals */
+.signal-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(48,54,61,0.4);
+  font-size: 13px;
+}
+.signal-item:last-child { border-bottom: none; }
+
+/* Assessment text */
+.assessment-text {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--text-secondary);
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .grid-2 { grid-template-columns: 1fr; }
+  .grid-3 { grid-template-columns: 1fr; }
+  .econ-grid { grid-template-columns: repeat(3, 1fr); }
+  .header-inner { flex-direction: column; align-items: flex-start; }
+}
+@media (max-width: 600px) {
+  .econ-grid { grid-template-columns: repeat(2, 1fr); }
+  .grid-4 { grid-template-columns: repeat(2, 1fr); }
+  .container { padding: 0 12px; }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #444c56; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="container">
+    <div class="header-inner">
+      <div class="header-left">
+        <h1>BRAZIL 2026 ELECTION MONITOR</h1>
+        <div class="subtitle">AI-Powered Political Intelligence Dashboard</div>
+      </div>
+      <div class="header-right">
+        <div class="header-meta">
+          <span>Report #5</span>
+          <span style="color:var(--border)">|</span>
+          <span>April 06, 2026</span>
+          <span style="color:var(--border)">|</span>
+          <span><strong style="color:var(--accent-blue)">180</strong> days to 1st round</span>
+        </div>
+        <div class="status-pill">
+          <span class="dot"></span>
+          TOSSUP
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+
+<!-- AT A GLANCE -->
+<section class="section">
+  <div class="section-title">At a Glance</div>
+  <div class="grid-2">
+    <!-- Who's Leading -->
+    <div class="card">
+      <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">Who's Leading</div>
+      <div style="font-size:28px;font-weight:700;color:var(--flavio);">Flávio Bolsonaro</div>
+      <div style="font-size:13px;color:var(--text-secondary);margin-bottom:8px;">47.6% in first-round polling</div>
+      <div style="font-size:12px;color:var(--accent-amber);margin-bottom:16px;line-height:1.5;border-left:2px solid var(--accent-amber);padding-left:10px;">Genuine shift — Flávio now leads by 1 point, breaking Lula&#x27;s previous advantage. Multiple sources confirm right-wing consolidation effect, though margin within statistical noise.</div>
+
+      <div style="font-size:12px;color:var(--text-secondary);margin-bottom:6px;">Runoff Projection (Lula vs Flávio)</div>
+      <div class="matchup-bar">
+        <div style="width:49.5%;background:var(--lula);">46.6%</div>
+        <div style="width:50.5%;background:var(--flavio);">47.6%</div>
+      </div>
+      <div class="matchup-label">
+        <span>Lula</span>
+        <span style="font-weight:600;color:var(--accent-amber);">STATISTICAL TIE</span>
+        <span>Flávio</span>
+      </div>
+
+      <div class="polymarket-row">
+        <div style="font-size:11px;color:var(--text-muted);margin-right:4px;">Polymarket:</div>
+        <div class="poly-chip"><span class="val" style="color:var(--lula);">42%</span> Lula</div>
+        <div class="poly-chip"><span class="val" style="color:var(--flavio);">38%</span> Flávio</div>
+        <div class="poly-chip"><span class="val" style="color:var(--santos);">6%</span> Santos</div>
+        <div class="poly-chip"><span class="val" style="color:#66bb6a;">5%</span> Haddad</div>
+        
+      </div>
+    </div>
+
+    <!-- Top Risks -->
+    <div class="card">
+      <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">Top Risks This Period</div>
+      
+      <div class="risk-item">
+        <div class="risk-dot amber"></div>
+        <div>
+          <div class="risk-text">Left-leaning Folha covering evangelical manifesto neutrally</div>
+          <div class="risk-label">unexpected &bull; MEDIUM severity</div>
+        </div>
+      </div>
+      <div class="risk-item">
+        <div class="risk-dot red"></div>
+        <div>
+          <div class="risk-text">Financial outlets (Valor/Exame) criticizing government on multiple economic fronts</div>
+          <div class="risk-label">cross-cutting &bull; HIGH severity</div>
+        </div>
+      </div>
+      <div class="risk-item">
+        <div class="risk-dot amber"></div>
+        <div>
+          <div class="risk-text">Diesel strike materialization</div>
+          <div class="risk-label">Watch &bull; MEDIUM severity</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONSOLIDATION TRACKER -->
+<section class="section">
+  <div class="section-title">Right-Wing Consolidation Tracker</div>
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+      <div class="consol-status">
+        <span style="color:var(--accent-green);">CONSOLIDATED</span>
+      </div>
+      <div style="font-size:28px;font-weight:800;color:var(--accent-green);">94.0%</div>
+    </div>
+
+    <div class="progress-track" style="margin:8px 0;">
+      <div class="progress-fill" style="width:94%;background:linear-gradient(90deg, var(--accent-red) 0%, var(--accent-amber) 50%, var(--accent-green) 100%);">
+        94.0%
+      </div>
+    </div>
+    <div class="progress-labels">
+      <span>0% &mdash; FRAGMENTED</span>
+      <span>40% &mdash; CONTESTED</span>
+      <span>70% &mdash; CONSOLIDATING</span>
+      <span>100% &mdash; CONSOLIDATED</span>
+    </div>
+
+    
+    <div class="consol-delta" style="color:var(--accent-green);background:rgba(63,185,80,0.1);">
+      <span class="arrow">&#9650;</span>
+      <span><strong>+2.0 pts</strong> from last report</span>
+    </div>
+
+    <div style="margin-top:12px;">
+      
+      <div class="mini-progress-row">
+        <div class="mini-progress-label">Polling concentration</div>
+        <div class="mini-progress-track"><div class="mini-progress-fill" style="width:28%;background:var(--accent-amber);"></div></div>
+        <div class="mini-progress-val" style="color:var(--accent-amber);">28</div>
+      </div>
+      <div class="mini-progress-row">
+        <div class="mini-progress-label">Endorsements</div>
+        <div class="mini-progress-track"><div class="mini-progress-fill" style="width:33%;background:var(--accent-amber);"></div></div>
+        <div class="mini-progress-val" style="color:var(--accent-amber);">33</div>
+      </div>
+      <div class="mini-progress-row">
+        <div class="mini-progress-label">#2 trajectory</div>
+        <div class="mini-progress-track"><div class="mini-progress-fill" style="width:18%;background:var(--accent-amber);"></div></div>
+        <div class="mini-progress-val" style="color:var(--accent-amber);">18</div>
+      </div>
+      <div class="mini-progress-row">
+        <div class="mini-progress-label">Party signals</div>
+        <div class="mini-progress-track"><div class="mini-progress-fill" style="width:15%;background:var(--accent-amber);"></div></div>
+        <div class="mini-progress-val" style="color:var(--accent-amber);">15</div>
+      </div>
+    </div>
+
+    <p style="font-size:13px;color:var(--text-secondary);margin-top:16px;line-height:1.7;">
+      Right-wing consolidation essentially complete. Tarcísio&#x27;s gubernatorial focus eliminated last major competitor, Jair&#x27;s backing provides base mobilization, evangelicals signal conditional support.
+    </p>
+  </div>
+</section>
+
+<!-- POLLING SNAPSHOT -->
+<section class="section">
+  <div class="section-title">Polling Snapshot</div>
+  <div class="grid-2">
+    <!-- First Round -->
+    <div class="card">
+      <h3 style="font-size:14px;font-weight:600;margin-bottom:16px;">First Round</h3>
+      
+      <div class="poll-row">
+        <div class="poll-name" style="color:var(--flavio);">Flávio</div>
+        <div class="poll-bar-track">
+          <div class="poll-bar-fill" style="width:47.6%;background:var(--flavio);">47.6%</div>
+        </div>
+        <div class="poll-delta delta-flat">&mdash;</div>
+      </div>
+      <div class="poll-row">
+        <div class="poll-name" style="color:var(--lula);">Lula</div>
+        <div class="poll-bar-track">
+          <div class="poll-bar-fill" style="width:46.6%;background:var(--lula);">46.6%</div>
+        </div>
+        <div class="poll-delta delta-flat">&mdash;</div>
+      </div>
+      <div class="poll-row">
+        <div class="poll-name" style="color:var(--caiado);">Caiado</div>
+        <div class="poll-bar-track">
+          <div class="poll-bar-fill" style="width:3.2%;background:var(--caiado);">3.2%</div>
+        </div>
+        <div class="poll-delta delta-flat">&mdash;</div>
+      </div>
+      <div class="poll-row">
+        <div class="poll-name" style="color:var(--santos);">Santos</div>
+        <div class="poll-bar-track">
+          <div class="poll-bar-fill" style="width:2.1%;background:var(--santos);">2.1%</div>
+        </div>
+        <div class="poll-delta delta-flat">&mdash;</div>
+      </div>
+      <div class="poll-row">
+        <div class="poll-name" style="color:var(--text-muted);">Others</div>
+        <div class="poll-bar-track">
+          <div class="poll-bar-fill" style="width:0.5%;background:var(--text-muted);">0.5%</div>
+        </div>
+        <div class="poll-delta delta-flat">&mdash;</div>
+      </div>
+    </div>
+
+    <!-- Runoff + Approval -->
+    <div class="card">
+      <h3 style="font-size:14px;font-weight:600;margin-bottom:16px;">Runoff Matchup</h3>
+      <div style="font-size:12px;color:var(--text-secondary);margin-bottom:6px;">Lula vs Flávio</div>
+      <div class="matchup-bar">
+        <div style="width:49.5%;background:var(--lula);">46.6%</div>
+        <div style="width:50.5%;background:var(--flavio);">47.6%</div>
+      </div>
+      <div class="matchup-label"><span>Lula</span><span>Flávio</span></div>
+
+      
+      <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);">
+        <div style="font-size:12px;color:var(--text-secondary);margin-bottom:6px;">Lula Approval Rating</div>
+        <div class="approval-bar">
+          <div style="width:37.8%;background:var(--accent-green);">37% Approve</div>
+          <div style="width:62.2%;background:var(--accent-red);opacity:0.8;">61% Disapprove</div>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Net approval: <span style="color:var(--accent-red);font-weight:600;">-24.0</span></div>
+      </div>
+    </div>
+  </div>
+  
+    <div class="card" style="margin-top:12px;">
+      <h3 style="font-size:14px;font-weight:600;margin-bottom:12px;">Pollster Sources &mdash; Confidence: <span style="color:var(--text-muted);font-weight:600;">MEDIUM — single tier A poll, consistent with betting market trend</span></h3>
+      <div style="font-size:12px;color:var(--text-secondary);margin-bottom:12px;line-height:1.6;">
+        Polls are <strong>credibility-weighted</strong> based on methodological rigor and historical accuracy.<br>
+        <span style="color:var(--accent-green);">&#9679;</span> <strong>Tier A</strong> (weight 1.0) — Gold-standard pollsters: Datafolha, Ipec, Quaest, AtlasIntel<br>
+        <span style="color:var(--accent-amber);">&#9679;</span> <strong>Tier B</strong> (weight 0.7) — Reliable with caveats: BTG/Nexus, Paraná Pesquisas, Real Time Big Data<br>
+        <span style="color:var(--accent-red);">&#9679;</span> <strong>Tier C</strong> (weight 0.3) — Unknown methodology or partisan-affiliated
+      </div>
+      <table class="data-table" style="font-size:12px;">
+        <thead>
+          <tr><th>Pollster</th><th>Tier</th><th style="text-align:center;">Weight</th><th>Date</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+              <td style="font-weight:500;">AtlasIntel</td>
+              <td><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;background:var(--accent-green);color:#000;">Tier A</span></td>
+              <td style="text-align:center;">1.0</td>
+              <td style="color:var(--text-muted);">2026-03-23</td>
+            </tr>
+        </tbody>
+      </table>
+    </div>
+</section>
+
+<!-- TREND CHARTS -->
+<section class="section">
+  <div class="section-title">Trends</div>
+  <div class="grid-2" style="margin-bottom:16px;">
+    <div class="chart-container">
+      <h3>First Round Polling Trend</h3>
+      <div class="chart-wrapper"><canvas id="pollingChart"></canvas></div>
+    </div>
+    <div class="chart-container">
+      <h3>Polymarket Odds Trend</h3>
+      <div class="chart-wrapper"><canvas id="polyChart"></canvas></div>
+    </div>
+  </div>
+  <div class="chart-container">
+    <h3>Consolidation Index Trend</h3>
+    <div class="chart-wrapper"><canvas id="consolChart"></canvas></div>
+  </div>
+</section>
+
+<!-- STRUCTURAL CHANGE REGISTER -->
+<section class="section">
+  <div class="section-title">Structural Change Register</div>
+  <div class="card" style="padding:0;overflow-x:auto;">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Change</th>
+          <th>Type</th>
+          <th>Impact</th>
+          <th>First Detected</th>
+          <th>Confidence</th>
+        </tr>
+      </thead>
+      <tbody>
+        
+        <tr>
+          <td style="color:var(--text-primary);">Right-wing consolidation around Flávio Bolsonaro</td>
+          <td><span class="badge badge-blue">candidate_consolidation</span></td>
+          <td style="color:var(--text-secondary);">Eliminates vote splitting, maximizes anti-Lula coalition</td>
+          <td>2026-02-01</td>
+          <td><span class="badge badge-green">CONFIRMED</span></td>
+        </tr>
+        <tr>
+          <td style="color:var(--text-primary);">Economic narrative shift against incumbent</td>
+          <td><span class="badge badge-blue">sentiment_shift</span></td>
+          <td style="color:var(--text-secondary);">Cross-cutting economic criticism hurts approval</td>
+          <td>2026-03-01</td>
+          <td><span class="badge badge-green">CONFIRMED</span></td>
+        </tr>
+        <tr>
+          <td style="color:var(--text-primary);">Judicial activism as mobilizing narrative</td>
+          <td><span class="badge badge-blue">frame_emergence</span></td>
+          <td style="color:var(--text-secondary);">Could energize conservative base turnout</td>
+          <td>2026-04-06</td>
+          <td><span class="badge badge-amber">MONITORING</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- NARRATIVE & SENTIMENT -->
+<section class="section">
+  <div class="section-title">Narrative &amp; Sentiment</div>
+  <div class="grid-2" style="margin-bottom:16px;">
+    <!-- Cross-Cutting Signals -->
+    <div class="card">
+      <h3 style="font-size:14px;font-weight:600;margin-bottom:12px;">Cross-Cutting Signals</h3>
+      
+      <div class="signal-item">
+        <span style="color:var(--text-secondary);">Left-leaning Folha covering evangelical manifesto neutrally</span>
+        <span class="badge badge-amber">MEDIUM</span>
+      </div>
+      <div class="signal-item">
+        <span style="color:var(--text-secondary);">Financial outlets (Valor/Exame) criticizing government on multiple economic fronts</span>
+        <span class="badge badge-red">HIGH</span>
+      </div>
+    </div>
+
+    <!-- Active Narratives -->
+    <div class="card">
+      <h3 style="font-size:14px;font-weight:600;margin-bottom:12px;">Active Narratives</h3>
+      <table class="data-table" style="font-size:12px;">
+        <thead>
+          <tr><th>Narrative</th><th>Status</th><th>Runs</th></tr>
+        </thead>
+        <tbody>
+          
+          <tr>
+            <td style="color:var(--text-primary);">Technical tie race</td>
+            <td><span class="narrative-status"><span class="arrow-up">&#9650;</span> INTENSIFYING</span></td>
+            <td>3</td>
+          </tr>
+          <tr>
+            <td style="color:var(--text-primary);">Economic headwinds for Lula</td>
+            <td><span class="narrative-status"><span class="arrow-up">&#9650;</span> INTENSIFYING</span></td>
+            <td>4</td>
+          </tr>
+          <tr>
+            <td style="color:var(--text-primary);">Right-wing consolidation complete</td>
+            <td><span class="narrative-status"><span class="stable">&#9679;</span> STABLE</span></td>
+            <td>2</td>
+          </tr>
+          <tr>
+            <td style="color:var(--text-primary);">Judicial activism backlash</td>
+            <td><span class="narrative-status"><span class="new-tag">&#9733;</span> NEW</span></td>
+            <td>1</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="font-size:14px;font-weight:600;margin-bottom:8px;">Language Divergence: EN vs PT Sources</h3>
+    <p style="font-size:13px;color:var(--text-secondary);line-height:1.7;">
+      English sources emphasize democratic erosion concerns, Portuguese sources focus on economic performance and cost of living
+    </p>
+  </div>
+</section>
+
+<!-- ECONOMIC DASHBOARD -->
+<section class="section">
+  <div class="section-title">Economic Dashboard</div>
+  <div class="econ-grid">
+    
+    <div class="econ-card">
+      <div class="econ-label">USD/BRL</div>
+      <div class="econ-value" style="color:var(--accent-amber);">5.16</div>
+      <div class="econ-change"><span class="econ-status" style="background:var(--accent-red);"></span><span class="delta-up" style="color:var(--accent-red);">&#9650; 0.1</span></div>
+      <div style="font-size:10px;color:var(--text-muted);margin-top:4px;">Threshold: 5.50</div>
+    </div>
+    <div class="econ-card">
+      <div class="econ-label">Diesel</div>
+      <div class="econ-value" style="color:var(--accent-amber);">R$7.35</div>
+      <div class="econ-change"><span class="econ-status" style="background:var(--text-muted);"></span><span style="color:var(--text-muted);">&mdash; 0.0</span></div>
+      <div style="font-size:10px;color:var(--text-muted);margin-top:4px;">Threshold: 7.50</div>
+    </div>
+    <div class="econ-card">
+      <div class="econ-label">IPCA 12m</div>
+      <div class="econ-value" style="color:var(--accent-green);">3.81%</div>
+      <div class="econ-change"><span class="econ-status" style="background:var(--text-muted);"></span><span style="color:var(--text-muted);">&mdash; 0.0</span></div>
+      <div style="font-size:10px;color:var(--text-muted);margin-top:4px;">Threshold: 5.00%</div>
+    </div>
+    <div class="econ-card">
+      <div class="econ-label">Selic</div>
+      <div class="econ-value" style="color:var(--accent-amber);">14.65%</div>
+      <div class="econ-change"><span class="econ-status" style="background:var(--text-muted);"></span><span style="color:var(--text-muted);">&mdash; 0.0</span></div>
+      <div style="font-size:10px;color:var(--text-muted);margin-top:4px;">Watch: >15%</div>
+    </div>
+    <div class="econ-card">
+      <div class="econ-label">Unemployment</div>
+      <div class="econ-value" style="color:var(--text-primary);">5.8%</div>
+      <div class="econ-change"><span class="econ-status" style="background:var(--text-muted);"></span><span style="color:var(--text-muted);">&mdash; 0.0</span></div>
+      <div style="font-size:10px;color:var(--text-muted);margin-top:4px;"></div>
+    </div>
+    <div class="econ-card">
+      <div class="econ-label">Cesta B&aacute;sica</div>
+      <div class="econ-value" style="color:var(--accent-red);">R$853</div>
+      <div class="econ-change"><span class="econ-status" style="background:var(--text-muted);"></span><span style="color:var(--text-muted);">&mdash; 0.0</span></div>
+      <div style="font-size:10px;color:var(--text-muted);margin-top:4px;">Threshold: R$800</div>
+    </div>
+  </div>
+  
+</section>
+
+<!-- EVENT LOG -->
+<section class="section">
+  <div class="section-title">Event Log &mdash; This Period</div>
+  <div class="card">
+    
+    <div class="event-item">
+      <div class="event-date">2026-04-04</div>
+      <div class="event-desc">16 ministers resign ahead of deadline</div>
+      <div class="event-tags"><span class="event-tag">Consolidation</span><span class="event-tag">Narrative</span></div>
+    </div>
+    <div class="event-item">
+      <div class="event-date">2026-04-02</div>
+      <div class="event-desc">Truckers threaten strike over diesel costs</div>
+      <div class="event-tags"><span class="event-tag">Economic</span><span class="event-tag">Narrative</span></div>
+    </div>
+    <div class="event-item">
+      <div class="event-date">2026-03-30</div>
+      <div class="event-desc">Evangelical Values 2026 manifesto released</div>
+      <div class="event-tags"><span class="event-tag">Consolidation</span><span class="event-tag">Narrative</span></div>
+    </div>
+    <div class="event-item">
+      <div class="event-date">2026-03-23</div>
+      <div class="event-desc">AtlasIntel poll shows Flávio leading Lula</div>
+      <div class="event-tags"><span class="event-tag">Polling</span></div>
+    </div>
+
+    <!-- Electoral Timeline -->
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);">
+      <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">Electoral Timeline</div>
+      <div class="timeline-bar">
+        <div class="timeline-track">
+          <div class="timeline-fill" style="width:31%;"></div>
+          <div class="timeline-marker" style="left:31%;"></div>
+        </div>
+      </div>
+      <div class="timeline-labels">
+        <span>Jan 2026<br>Pre-campaign</span>
+        <span style="color:var(--accent-blue);font-weight:600;">Apr 6 &mdash; TODAY</span>
+        <span>Aug 5<br>Campaigns open</span>
+        <span>Oct 4<br>1st round</span>
+        <span>Oct 25<br>Runoff</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ASSESSMENT -->
+<section class="section">
+  <div class="section-title">Assessment</div>
+
+  <div class="card" style="margin-bottom:16px;">
+    <h3 style="font-size:14px;font-weight:600;margin-bottom:12px;">Race State</h3>
+    <p class="assessment-text">
+      The race has entered true tossup territory with Flávio Bolsonaro achieving a marginal polling lead and right-wing consolidation nearing completion. Economic headwinds are creating structural headwinds for the incumbent, while the opposition has successfully unified around a single candidate. The April deadline for party switching marks the end of the pre-positioning phase.
+    </p>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3 style="font-size:14px;font-weight:600;margin-bottom:16px;">Scenario Probabilities</h3>
+      
+      <div class="scenario-row">
+        <div class="scenario-label">Lula 1st round</div>
+        <div class="scenario-track">
+          <div class="scenario-fill" style="width:15%;background:var(--lula);opacity:1.0;">15%</div>
+        </div>
+        <div class="scenario-meta"></div>
+      </div>
+      <div class="scenario-row">
+        <div class="scenario-label">Lula in runoff</div>
+        <div class="scenario-track">
+          <div class="scenario-fill" style="width:48%;background:var(--lula);opacity:0.7;">48%</div>
+        </div>
+        <div class="scenario-meta"></div>
+      </div>
+      <div class="scenario-row">
+        <div class="scenario-label">Opposition runoff</div>
+        <div class="scenario-track">
+          <div class="scenario-fill" style="width:52%;background:var(--flavio);opacity:1.0;">52%</div>
+        </div>
+        <div class="scenario-meta"></div>
+      </div>
+      <div class="scenario-row">
+        <div class="scenario-label">Race reshapes</div>
+        <div class="scenario-track">
+          <div class="scenario-fill" style="width:5%;background:var(--text-muted);opacity:1.0;">5%</div>
+        </div>
+        <div class="scenario-meta"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 style="font-size:14px;font-weight:600;margin-bottom:12px;">Watch List &mdash; Next Period</h3>
+      
+      <div class="watch-item">
+        <div class="watch-num">1</div>
+        <div>
+          <div style="font-size:13px;color:var(--text-primary);font-weight:500;">Diesel strike materialization</div>
+        </div>
+      </div>
+      <div class="watch-item">
+        <div class="watch-num">2</div>
+        <div>
+          <div style="font-size:13px;color:var(--text-primary);font-weight:500;">Lula approval trajectory</div>
+        </div>
+      </div>
+      <div class="watch-item">
+        <div class="watch-num">3</div>
+        <div>
+          <div style="font-size:13px;color:var(--text-primary);font-weight:500;">Evangelical endorsement cascade</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section class="section">
+  <div class="section-title">About This Monitor</div>
+  <div class="about-section">
+    <h3>What is this?</h3>
+    <p>
+      The Brazil 2026 Election Monitor is an AI-powered political intelligence dashboard that combines <strong>Gemini CLI</strong> (Google) for real-time web search and data collection with <strong>Claude</strong> (Anthropic) for structured analysis and assessment. It provides regular snapshots of the presidential race, tracking polling, structural dynamics, economic indicators, and narrative trends.
+    </p>
+
+    <h4>How does it work?</h4>
+    <p>
+      Each report is generated through an automated pipeline: Gemini CLI searches official APIs (IBGE, BCB, AwesomeAPI) and news sources, collecting polling data, economic indicators, and political developments. This raw data is then processed by Claude, which applies credibility weighting, cross-references sources, detects structural changes, and produces the analysis you see above.
+    </p>
+
+    <h4>How to use it wisely</h4>
+    <ul>
+      <li>This is a <strong>monitoring tool</strong>, not a prediction engine</li>
+      <li>Polling data is weighted by pollster credibility (Tier A/B/C) but all polls have margins of error (typically &plusmn;2-3%)</li>
+      <li>Sentiment analysis detects narrative shifts, not voter intent</li>
+      <li>Structural change detection requires confirmation across multiple runs before being marked CONFIRMED</li>
+      <li>Polymarket odds reflect trader sentiment, not election outcomes</li>
+      <li>News sources may include AI-searched results &mdash; URLs should be verified before citing</li>
+      <li>Economic thresholds are based on historical precedent, not guaranteed electoral triggers</li>
+      <li>This dashboard is updated weekly (or as scheduled) &mdash; it captures snapshots, not real-time data</li>
+    </ul>
+
+    <h4>Data Sources</h4>
+    <p>
+      <strong>Official APIs:</strong> IBGE (employment, inflation), Banco Central do Brasil (Selic, exchange rates), AwesomeAPI (FX rates), DIEESE (cesta b&aacute;sica).
+      <strong>Polling:</strong> Datafolha, Quaest, AtlasIntel, Ipec, aggregated with credibility weighting.
+      <strong>Markets:</strong> Polymarket (prediction markets).
+      <strong>News:</strong> Collected via Gemini CLI web search across PT and EN sources.
+    </p>
+
+    <h4>Built with</h4>
+    <p>
+      <strong>Gemini CLI</strong> (Google) for web search and data collection &bull;
+      <strong>Claude API</strong> (Anthropic) for analysis and report generation &bull;
+      <strong>Python</strong> for pipeline orchestration and API integration &bull;
+      <strong>Chart.js</strong> for data visualization
+    </p>
+  </div>
+
+  <div class="disclaimer">
+    This is an independent analysis tool. Not affiliated with any political party, campaign, or government entity.<br>
+    Last updated: April 06, 2026 &bull; Report #5
+  </div>
+</section>
+
+</main>
+
+<script>
+// Chart.js global defaults for dark theme
+Chart.defaults.color = '#8b949e';
+Chart.defaults.borderColor = 'rgba(48,54,61,0.6)';
+Chart.defaults.font.family = "'Inter', sans-serif";
+Chart.defaults.font.size = 11;
+Chart.defaults.plugins.legend.labels.boxWidth = 12;
+Chart.defaults.plugins.legend.labels.padding = 16;
+
+const chartTooltip = {
+  backgroundColor: '#1c2129',
+  borderColor: '#30363d',
+  borderWidth: 1,
+  titleColor: '#e6edf3',
+  bodyColor: '#8b949e',
+  callbacks: { label: ctx => ctx.dataset.label + ': ' + ctx.parsed.y + '%' }
+};
+
+// Polling Trend Chart
+const pollLabels = ["Apr 6"];
+const pollDatasets = [{"label": "Lula", "data": [46.6], "borderColor": "#d32f2f", "borderWidth": 2.5, "pointRadius": 4, "pointBackgroundColor": "#d32f2f", "tension": 0.3, "fill": false, "borderDash": []}, {"label": "Fl\u00e1vio", "data": [47.6], "borderColor": "#1565c0", "borderWidth": 2.5, "pointRadius": 4, "pointBackgroundColor": "#1565c0", "tension": 0.3, "fill": false, "borderDash": []}, {"label": "Caiado", "data": [3.2], "borderColor": "#f9a825", "borderWidth": 1.5, "pointRadius": 2, "pointBackgroundColor": "#f9a825", "tension": 0.3, "fill": false, "borderDash": [4, 4]}, {"label": "Santos", "data": [2.1], "borderColor": "#7c4dff", "borderWidth": 1.5, "pointRadius": 2, "pointBackgroundColor": "#7c4dff", "tension": 0.3, "fill": false, "borderDash": [4, 4]}, {"label": "Others", "data": [0.5], "borderColor": "#8b949e", "borderWidth": 1.5, "pointRadius": 2, "pointBackgroundColor": "#8b949e", "tension": 0.3, "fill": false, "borderDash": [4, 4]}];
+if (pollLabels.length > 0) {
+  new Chart(document.getElementById('pollingChart'), {
+    type: 'line',
+    data: { labels: pollLabels, datasets: pollDatasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      scales: {
+        y: {
+          min: 0, max: 50,
+          grid: { color: 'rgba(48,54,61,0.4)' },
+          ticks: { callback: v => v + '%' }
+        },
+        x: { grid: { color: 'rgba(48,54,61,0.2)' } }
+      },
+      plugins: { tooltip: chartTooltip }
+    }
+  });
+}
+
+// Polymarket Trend Chart
+const polyLabels = ["Dec 1", "Jan 1", "Feb 1", "Mar 1", "Apr 6"];
+const polyDatasets = [{"label": "Lula", "data": [49.5, 51.5, 52.0, 49.5, 41.5], "borderColor": "#d32f2f", "borderWidth": 2.5, "pointRadius": 4, "pointBackgroundColor": "#d32f2f", "tension": 0.3, "fill": false, "borderDash": []}, {"label": "Fl\u00e1vio", "data": [1.7, 17.0, 27.7, 34.2, 37.6], "borderColor": "#1565c0", "borderWidth": 2.5, "pointRadius": 4, "pointBackgroundColor": "#1565c0", "tension": 0.3, "fill": false, "borderDash": []}, {"label": "Santos", "data": [6.7, 7.0, 5.8, 5.3, 6.3], "borderColor": "#7c4dff", "borderWidth": 1.5, "pointRadius": 2, "pointBackgroundColor": "#7c4dff", "tension": 0.3, "fill": false, "borderDash": [4, 4]}];
+if (polyLabels.length > 0) {
+  new Chart(document.getElementById('polyChart'), {
+    type: 'line',
+    data: { labels: polyLabels, datasets: polyDatasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      scales: {
+        y: {
+          min: 0, max: 65,
+          grid: { color: 'rgba(48,54,61,0.4)' },
+          ticks: { callback: v => v + '%' }
+        },
+        x: { grid: { color: 'rgba(48,54,61,0.2)' } }
+      },
+      plugins: { tooltip: chartTooltip }
+    }
+  });
+}
+
+// Consolidation Index Trend Chart
+const consolLabels = ["Apr 6"];
+const consolData = [94];
+if (consolLabels.length > 0) {
+  new Chart(document.getElementById('consolChart'), {
+    type: 'line',
+    data: {
+      labels: consolLabels,
+      datasets: [{"label": "Consolidation Index", "data": [94], "borderColor": "#58a6ff", "backgroundColor": "rgba(88,166,255,0.1)", "borderWidth": 2.5, "pointRadius": 5, "pointBackgroundColor": "#58a6ff", "tension": 0.3, "fill": true}]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      scales: {
+        y: {
+          min: 0, max: 100,
+          grid: { color: 'rgba(48,54,61,0.4)' },
+          ticks: { callback: v => v + '%' }
+        },
+        x: { grid: { color: 'rgba(48,54,61,0.2)' } }
+      },
+      plugins: {
+        tooltip: {
+          backgroundColor: '#1c2129',
+          borderColor: '#30363d',
+          borderWidth: 1,
+          titleColor: '#e6edf3',
+          bodyColor: '#8b949e',
+          callbacks: { label: ctx => 'Index: ' + ctx.parsed.y + '%' }
+        }
+      }
+    },
+    plugins: [{
+      id: 'consolBands',
+      beforeDraw(chart) {
+        const { ctx, chartArea: { left, right, top, bottom }, scales: { y } } = chart;
+        const bands = [
+          { from: 0, to: 40, color: 'rgba(248,81,73,0.06)' },
+          { from: 40, to: 60, color: 'rgba(210,153,34,0.06)' },
+          { from: 60, to: 80, color: 'rgba(210,153,34,0.04)' },
+          { from: 80, to: 100, color: 'rgba(63,185,80,0.06)' }
+        ];
+        bands.forEach(b => {
+          const yTop = y.getPixelForValue(b.to);
+          const yBottom = y.getPixelForValue(b.from);
+          ctx.fillStyle = b.color;
+          ctx.fillRect(left, yTop, right - left, yBottom - yTop);
+        });
+        [40, 60, 80].forEach(val => {
+          const yPos = y.getPixelForValue(val);
+          ctx.strokeStyle = 'rgba(48,54,61,0.6)';
+          ctx.lineWidth = 1;
+          ctx.setLineDash([4, 4]);
+          ctx.beginPath();
+          ctx.moveTo(left, yPos);
+          ctx.lineTo(right, yPos);
+          ctx.stroke();
+          ctx.setLineDash([]);
+        });
+        ctx.fillStyle = '#656d76';
+        ctx.font = '10px Inter, sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText('FRAGMENTED', left + 6, y.getPixelForValue(20) + 4);
+        ctx.fillText('CONTESTED', left + 6, y.getPixelForValue(50) + 4);
+        ctx.fillText('CONSOLIDATING', left + 6, y.getPixelForValue(70) + 4);
+        ctx.fillText('CONSOLIDATED', left + 6, y.getPixelForValue(90) + 4);
+      }
+    }]
+  });
+}
+</script>
+
+</body>
+</html>
