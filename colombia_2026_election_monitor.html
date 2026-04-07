@@ -1,0 +1,1360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Colombia 2026 Election Monitor</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#x1F1E8;&#x1F1F4;</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0d1117;
+  --card: #161b22;
+  --card-hover: #1c2129;
+  --border: #30363d;
+  --text-primary: #e6edf3;
+  --text-secondary: #8b949e;
+  --text-muted: #656d76;
+  --accent-blue: #58a6ff;
+  --accent-green: #3fb950;
+  --accent-amber: #d29922;
+  --accent-red: #f85149;
+  --cepeda: #d32f2f;
+  --valencia: #1565c0;
+  --espriella: #e65100;
+  --radius: 8px;
+  --radius-lg: 12px;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg);
+  color: var(--text-primary);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+.container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+/* Header */
+.header {
+  background: linear-gradient(180deg, #161b22 0%, var(--bg) 100%);
+  border-bottom: 1px solid var(--border);
+  padding: 20px 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(12px);
+}
+.header-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.header-left h1 {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: var(--text-primary);
+}
+.header-left .subtitle {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 400;
+  margin-top: 2px;
+}
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.header-meta span { white-space: nowrap; }
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  background: rgba(210, 153, 34, 0.15);
+  color: var(--accent-amber);
+  border: 1px solid rgba(210, 153, 34, 0.3);
+}
+.status-pill .dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--accent-amber);
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* Sections */
+.section { margin: 32px 0; }
+.section-title {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* Cards */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  transition: border-color 0.2s;
+}
+.card:hover { border-color: #444c56; }
+
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+.grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+
+/* Matchup bar */
+.matchup-bar {
+  display: flex;
+  height: 32px;
+  border-radius: 6px;
+  overflow: hidden;
+  margin: 8px 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+.matchup-bar > div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  transition: width 0.6s ease;
+}
+.matchup-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+.polymarket-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.poly-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.poly-chip .val { font-weight: 600; color: var(--text-primary); }
+
+/* Risk items */
+.risk-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(48,54,61,0.5);
+}
+.risk-item:last-child { border-bottom: none; }
+.risk-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  margin-top: 6px;
+  flex-shrink: 0;
+}
+.risk-dot.red { background: var(--accent-red); }
+.risk-dot.amber { background: var(--accent-amber); }
+.risk-dot.blue { background: var(--accent-blue); }
+.risk-text { font-size: 13px; line-height: 1.5; }
+.risk-label { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+/* Progress bars */
+.progress-track {
+  height: 24px;
+  background: rgba(48,54,61,0.5);
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+}
+.progress-fill {
+  height: 100%;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  padding-left: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+  transition: width 0.8s ease;
+}
+.progress-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 4px;
+  padding: 0 2px;
+}
+
+/* Mini progress */
+.mini-progress-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 8px 0;
+}
+.mini-progress-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  width: 160px;
+  flex-shrink: 0;
+}
+.mini-progress-track {
+  flex: 1;
+  height: 8px;
+  background: rgba(48,54,61,0.5);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.mini-progress-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.6s ease;
+}
+.mini-progress-val {
+  font-size: 12px;
+  font-weight: 600;
+  width: 60px;
+  text-align: right;
+}
+
+.consol-delta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin: 8px 0 16px 0;
+}
+.consol-delta .arrow { font-size: 16px; }
+
+/* Polling rows */
+.poll-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 10px 0;
+}
+.poll-name {
+  width: 130px;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: right;
+  flex-shrink: 0;
+}
+.poll-bar-track {
+  flex: 1;
+  height: 28px;
+  background: rgba(48,54,61,0.3);
+  border-radius: 6px;
+  overflow: hidden;
+  position: relative;
+}
+.poll-bar-fill {
+  height: 100%;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  padding-left: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+}
+.poll-rej {
+  width: 110px;
+  text-align: left;
+  flex-shrink: 0;
+}
+.delta-up { color: var(--accent-red); }
+.delta-down { color: var(--accent-green); }
+
+/* Footnote */
+.footnote {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(48,54,61,0.5);
+}
+
+/* Chart containers */
+.chart-container {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+}
+.chart-container h3 {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+.chart-wrapper { position: relative; height: 260px; }
+
+/* Tables */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.data-table th {
+  text-align: left;
+  padding: 10px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+}
+.data-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(48,54,61,0.4);
+  color: var(--text-secondary);
+}
+.data-table tr:hover td { background: rgba(48,54,61,0.2); }
+
+/* Badges */
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+.badge-green { background: rgba(63,185,80,0.15); color: var(--accent-green); }
+.badge-amber { background: rgba(210,153,34,0.15); color: var(--accent-amber); }
+.badge-red { background: rgba(248,81,73,0.15); color: var(--accent-red); }
+.badge-gray { background: rgba(139,148,158,0.15); color: var(--text-secondary); }
+.badge-blue { background: rgba(88,166,255,0.15); color: var(--accent-blue); }
+
+/* Economic indicators */
+.econ-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+}
+.econ-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  text-align: center;
+}
+.econ-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+.econ-value {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.econ-change {
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+/* Event log */
+.event-item {
+  display: flex;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(48,54,61,0.4);
+  font-size: 13px;
+}
+.event-item:last-child { border-bottom: none; }
+.event-date {
+  color: var(--text-muted);
+  font-size: 12px;
+  width: 80px;
+  flex-shrink: 0;
+  font-weight: 500;
+}
+.event-desc { flex: 1; color: var(--text-secondary); }
+.event-tags { display: flex; gap: 6px; flex-shrink: 0; }
+.event-tag {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(88,166,255,0.1);
+  color: var(--accent-blue);
+}
+
+/* Timeline */
+.timeline-bar {
+  display: flex;
+  align-items: center;
+  background: rgba(48,54,61,0.3);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-top: 16px;
+  position: relative;
+  overflow: hidden;
+}
+.timeline-track {
+  flex: 1;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  position: relative;
+}
+.timeline-fill {
+  position: absolute;
+  left: 0; top: 0;
+  height: 100%;
+  background: var(--accent-blue);
+  border-radius: 2px;
+}
+.timeline-marker {
+  position: absolute;
+  top: -6px;
+  width: 16px; height: 16px;
+  background: var(--accent-blue);
+  border: 2px solid var(--bg);
+  border-radius: 50%;
+  transform: translateX(-50%);
+}
+.timeline-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+/* Scenario bars */
+.scenario-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 10px 0;
+}
+.scenario-label {
+  width: 180px;
+  font-size: 13px;
+  text-align: right;
+  flex-shrink: 0;
+}
+.scenario-track {
+  flex: 1;
+  height: 24px;
+  background: rgba(48,54,61,0.3);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.scenario-fill {
+  height: 100%;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  padding-left: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+}
+
+/* Watch list */
+.watch-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(48,54,61,0.4);
+}
+.watch-item:last-child { border-bottom: none; }
+.watch-num {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: rgba(88,166,255,0.15);
+  color: var(--accent-blue);
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Signals */
+.signal-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(48,54,61,0.4);
+  font-size: 13px;
+}
+.signal-item:last-child { border-bottom: none; }
+
+/* About section */
+.about-section {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 32px;
+  margin-top: 32px;
+}
+.about-section h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: var(--text-primary);
+}
+.about-section h4 {
+  font-size: 13px;
+  font-weight: 600;
+  margin: 20px 0 8px 0;
+  color: var(--text-secondary);
+}
+.about-section p, .about-section li {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+.about-section ul {
+  padding-left: 20px;
+  margin: 8px 0;
+}
+.about-section li { margin: 4px 0; }
+.disclaimer {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 24px 0 32px 0;
+  border-top: 1px solid var(--border);
+  margin-top: 32px;
+}
+
+.assessment-text {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--text-secondary);
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .grid-2 { grid-template-columns: 1fr; }
+  .grid-3 { grid-template-columns: 1fr; }
+  .econ-grid { grid-template-columns: repeat(3, 1fr); }
+  .header-inner { flex-direction: column; align-items: flex-start; }
+}
+@media (max-width: 600px) {
+  .econ-grid { grid-template-columns: repeat(2, 1fr); }
+  .container { padding: 0 12px; }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #444c56; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="container">
+    <div class="header-inner">
+      <div class="header-left">
+        <h1>COLOMBIA 2026 ELECTION MONITOR</h1>
+        <div class="subtitle">AI-Powered Political Intelligence Dashboard &mdash; Last updated: 2026-04-07 11:27</div>
+      </div>
+      <div class="header-right">
+        <div class="header-meta">
+          <span>Report #1</span>
+          <span style="color:var(--border)">|</span>
+          <span>April 07, 2026</span>
+          <span style="color:var(--border)">|</span>
+          <span><strong style="color:var(--accent-blue)">53</strong>d to 1st round</span>
+          <span style="color:var(--border)">|</span>
+          <span><strong style="color:var(--accent-blue)">74</strong>d to runoff</span>
+        </div>
+        <div class="status-pill">
+          <span class="dot"></span>
+          TOSSUP
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+
+<!-- AT A GLANCE -->
+<section class="section">
+  <div class="section-title">At a Glance</div>
+  <div class="grid-2">
+    <!-- Leader + runoff math -->
+    <div class="card">
+      <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">Who's Leading (1st Round)</div>
+      <div style="font-size:28px;font-weight:700;color:var(--cepeda);">Iván Cepeda</div>
+      <div style="font-size:13px;color:var(--text-secondary);margin-bottom:8px;">43.0% in first-round polling</div>
+      <div style="font-size:12px;color:var(--accent-amber);margin-bottom:16px;line-height:1.5;border-left:2px solid var(--accent-amber);padding-left:10px;">Valencia surging on post-primary consolidation and security concerns, but may be underestimated given March primary performance.</div>
+
+      <div style="font-size:12px;color:var(--text-secondary);margin:12px 0 6px 0;">Runoff Projection (Cepeda vs Valencia + transfer)</div>
+      <div class="matchup-bar">
+        <div style="width:48.0%;background:var(--cepeda);">43.0%</div>
+        <div style="width:52.0%;background:var(--valencia);">46.5%</div>
+      </div>
+      <div class="matchup-label">
+        <span>Cepeda base</span>
+        <span style="font-weight:600;color:var(--accent-amber);">VALENCIA +3.5</span>
+        <span>Valencia + 50% of De la Espriella</span>
+      </div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:6px;line-height:1.5;">
+        Valencia base 41.0% + 11.0% × 0.50 transfer = 46.5%
+      </div>
+
+      <div class="polymarket-row">
+        <div style="font-size:11px;color:var(--text-muted);margin-right:4px;">Polymarket:</div>
+        <div class="poly-chip"><span class="val" style="color:var(--cepeda);">43%</span> Cepeda</div>
+        <div class="poly-chip"><span class="val" style="color:var(--valencia);">41%</span> Valencia</div>
+        <div class="poly-chip"><span class="val" style="color:var(--espriella);">11%</span> De la Espriella</div>
+        
+      </div>
+    </div>
+
+    <!-- Top Risks + Cleavage + Governability -->
+    <div class="card">
+      <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Dominant Cleavage</div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+        <span style="font-size:18px;font-weight:700;color:var(--accent-blue);">SECURITY</span>
+        <span class="badge badge-red">INTENSIFYING</span>
+        <span style="font-size:11px;color:var(--text-muted);">benefits</span>
+        <span style="font-size:13px;font-weight:600;color:var(--espriella);">De la Espriella</span>
+      </div>
+      <p style="font-size:12px;color:var(--text-secondary);line-height:1.6;margin-bottom:14px;">Gulf Clan &#x27;Plan Pistola&#x27; and social leader killings dominate news cycle, discrediting &#x27;Total Peace&#x27; approach and favoring iron-fist candidates.</p>
+
+      <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;border-top:1px solid var(--border);padding-top:12px;">Top Risks This Period</div>
+      
+      <div class="risk-item">
+        <div class="risk-dot red"></div>
+        <div>
+          <div class="risk-text">Security deterioration despite Total Peace</div>
+          <div class="risk-label">cross-cutting &bull; HIGH severity</div>
+        </div>
+      </div>
+      <div class="risk-item">
+        <div class="risk-dot amber"></div>
+        <div>
+          <div class="risk-text">Trade war with US over repatriation</div>
+          <div class="risk-label">unexpected &bull; MEDIUM severity</div>
+        </div>
+      </div>
+      <div class="risk-item">
+        <div class="risk-dot amber"></div>
+        <div>
+          <div class="risk-text">De la Espriella endorsement signals</div>
+          <div class="risk-label">Watch &bull; MEDIUM severity</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CANDIDATES & POLLING -->
+<section class="section">
+  <div class="section-title">Candidates &amp; Polling</div>
+  <div class="grid-3" style="margin-bottom:16px;">
+    
+    <div class="card candidate-card" style="border-top:3px solid var(--cepeda);">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:8px;">
+        <div>
+          <div style="font-size:18px;font-weight:700;color:var(--cepeda);">Iván Cepeda</div>
+          <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;">Left &bull; Pacto Histórico</div>
+        </div>
+        <div style="text-align:right;font-size:11px;color:var(--text-muted);">Social signal <span class="badge badge-amber">MEDIUM</span></div>
+      </div>
+      <div style="font-size:12px;color:var(--text-secondary);line-height:1.6;margin-top:10px;">
+        <div style="margin-bottom:6px;"><strong style="color:var(--text-primary);">VP:</strong> Aida Quilcué <span style="color:var(--text-muted);">— Indigenous rights leader</span></div>
+        <div style="margin-bottom:6px;"><strong style="color:var(--text-primary);">Strategy:</strong> Base Consolidation</div>
+        <div style="margin-bottom:6px;"><strong style="color:var(--text-primary);">Risk:</strong> <span style="color:var(--text-muted);">Risks being labelled sectarian; limits centre outreach</span></div>
+        <div style="margin-bottom:6px;"><strong style="color:var(--text-primary);">Platform:</strong> <span style="color:var(--text-muted);">Continuation of Petro&#x27;s Total Peace, agrarian reform, economic redistribution</span></div>
+        <div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(48,54,61,0.5);">
+          <strong style="color:var(--accent-blue);">Movement mechanism:</strong> <span style="color:var(--text-secondary);">opinion wave</span>
+        </div>
+      </div>
+    </div>
+    <div class="card candidate-card" style="border-top:3px solid var(--valencia);">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:8px;">
+        <div>
+          <div style="font-size:18px;font-weight:700;color:var(--valencia);">Paloma Valencia</div>
+          <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;">Centre-Right &bull; Centro Democrático</div>
+        </div>
+        <div style="text-align:right;font-size:11px;color:var(--text-muted);">Social signal <span class="badge badge-red">HIGH</span></div>
+      </div>
+      <div style="font-size:12px;color:var(--text-secondary);line-height:1.6;margin-top:10px;">
+        <div style="margin-bottom:6px;"><strong style="color:var(--text-primary);">VP:</strong> Juan Daniel Oviedo <span style="color:var(--text-muted);">— Economist, former DANE director, openly gay progressive centrist</span></div>
+        <div style="margin-bottom:6px;"><strong style="color:var(--text-primary);">Strategy:</strong> Center Balance</div>
+        <div style="margin-bottom:6px;"><strong style="color:var(--text-primary);">Risk:</strong> <span style="color:var(--text-muted);">Risks alienating conservative hardliners; technocratic move beyond Uribismo core</span></div>
+        <div style="margin-bottom:6px;"><strong style="color:var(--text-primary);">Platform:</strong> <span style="color:var(--text-muted);">Restore security operations, reverse oil exploration ban, economic orthodoxy, US realignment</span></div>
+        <div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(48,54,61,0.5);">
+          <strong style="color:var(--accent-blue);">Movement mechanism:</strong> <span style="color:var(--text-secondary);">machine activation</span>
+        </div>
+      </div>
+    </div>
+    <div class="card candidate-card" style="border-top:3px solid var(--espriella);">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:8px;">
+        <div>
+          <div style="font-size:18px;font-weight:700;color:var(--espriella);">Abelardo de la Espriella</div>
+          <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;">Far-Right &bull; Defenders of the Homeland</div>
+        </div>
+        <div style="text-align:right;font-size:11px;color:var(--text-muted);">Social signal <span class="badge badge-blue">LOW</span></div>
+      </div>
+      <div style="font-size:12px;color:var(--text-secondary);line-height:1.6;margin-top:10px;">
+        <div style="margin-bottom:6px;"><strong style="color:var(--text-primary);">VP:</strong> TBD <span style="color:var(--text-muted);">— </span></div>
+        <div style="margin-bottom:6px;"><strong style="color:var(--text-primary);">Strategy:</strong> Outsider</div>
+        <div style="margin-bottom:6px;"><strong style="color:var(--text-primary);">Risk:</strong> <span style="color:var(--text-muted);">No party machine; relies on social media + populist rallies</span></div>
+        <div style="margin-bottom:6px;"><strong style="color:var(--text-primary);">Platform:</strong> <span style="color:var(--text-muted);">40% state reduction, eliminate 70K government jobs (&#x27;chainsaw&#x27;), renounce presidential salary</span></div>
+        <div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(48,54,61,0.5);">
+          <strong style="color:var(--accent-blue);">Movement mechanism:</strong> <span style="color:var(--text-secondary);">viral moment</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="font-size:14px;font-weight:600;margin-bottom:16px;">First-Round Polling &mdash; Weighted Average</h3>
+    
+      <div class="poll-row">
+        <div class="poll-name" style="color:var(--cepeda);">Cepeda</div>
+        <div class="poll-bar-track">
+          <div class="poll-bar-fill" style="width:43%;background:var(--cepeda);">43%</div>
+        </div>
+        <div class="poll-rej"><span style="color:var(--text-muted);font-size:11px;">Rechazo: <span style="color:var(--accent-red);font-weight:600;">45.0%</span></span></div>
+      </div>
+      <div class="poll-row">
+        <div class="poll-name" style="color:var(--valencia);">Valencia</div>
+        <div class="poll-bar-track">
+          <div class="poll-bar-fill" style="width:41%;background:var(--valencia);">41%</div>
+        </div>
+        <div class="poll-rej"><span style="color:var(--text-muted);font-size:11px;">Rechazo: <span style="color:var(--accent-red);font-weight:600;">35.0%</span></span></div>
+      </div>
+      <div class="poll-row">
+        <div class="poll-name" style="color:var(--espriella);">De la Espriella</div>
+        <div class="poll-bar-track">
+          <div class="poll-bar-fill" style="width:11%;background:var(--espriella);">11%</div>
+        </div>
+        <div class="poll-rej"><span style="color:var(--text-muted);font-size:11px;">Rechazo: <span style="color:var(--accent-red);font-weight:600;">55.0%</span></span></div>
+      </div>
+      <div class="poll-row">
+        <div class="poll-name" style="color:var(--text-muted);">Others</div>
+        <div class="poll-bar-track">
+          <div class="poll-bar-fill" style="width:5%;background:var(--text-muted);">5%</div>
+        </div>
+        <div class="poll-rej"><span style="color:var(--text-muted);font-size:11px;">&mdash;</span></div>
+      </div>
+    <div style="font-size:11px;color:var(--text-muted);margin-top:12px;line-height:1.5;">
+      <strong>Rechazo</strong> (rejection rate) is the runoff ceiling — Colombian polling tradition tracks both vote intent and disapproval.
+    </div>
+    
+      <div style="margin-top:12px;padding:10px 12px;background:rgba(248,81,73,0.1);border-left:3px solid var(--accent-red);border-radius:4px;font-size:12px;color:var(--text-secondary);line-height:1.6;">
+        <strong style="color:var(--accent-red);">&#9888; Right-Underestimation Flag</strong> &mdash; Valencia polling is below her March 8 primary share. Colombian polls systematically underestimated the right in 2022 (Hernández surge).
+      </div>
+  </div>
+  
+    <div class="card" style="margin-top:12px;">
+      <h3 style="font-size:14px;font-weight:600;margin-bottom:12px;">Pollster Sources &mdash; Confidence: <span style="color:var(--accent-red);font-weight:600;">LOW</span></h3>
+      <div style="font-size:12px;color:var(--text-secondary);margin-bottom:12px;line-height:1.6;">
+        Polls are <strong>credibility-weighted</strong> by Colombia-specific tiering:<br>
+        <span style="color:var(--accent-green);">&#9679;</span> <strong>Tier A</strong> (1.0) — Invamer, GAD3 — gold-standard, ISO certified<br>
+        <span style="color:var(--accent-amber);">&#9679;</span> <strong>Tier B</strong> (0.7) — AtlasIntel, CNC — reliable with caveats<br>
+        <span style="color:var(--accent-red);">&#9679;</span> <strong>Tier C</strong> (0.3) — Guarumo-Ecoanalítica — suspected partisan bias
+      </div>
+      <table class="data-table" style="font-size:12px;">
+        <thead>
+          <tr><th>Pollster</th><th>Tier</th><th style="text-align:center;">Weight</th><th>Date</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+              <td style="font-weight:500;">Polymarket proxy</td>
+              <td><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;background:var(--accent-amber);color:#000;">Tier B</span></td>
+              <td style="text-align:center;">0.7</td>
+              <td style="color:var(--text-muted);">2026-04-01</td>
+            </tr>
+        </tbody>
+      </table>
+    </div>
+</section>
+
+<!-- RUNOFF COALITION TRACKER -->
+<section class="section">
+  <div class="section-title">Runoff Coalition Tracker</div>
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+      <div style="font-size:14px;font-weight:600;color:var(--accent-amber);">
+        MONITORING
+      </div>
+      <div style="font-size:28px;font-weight:800;color:var(--accent-amber);">35.0%</div>
+    </div>
+
+    <div class="progress-track" style="margin:8px 0;">
+      <div class="progress-fill" style="width:35%;background:linear-gradient(90deg, var(--accent-red) 0%, var(--accent-amber) 50%, var(--accent-green) 100%);">
+        35.0%
+      </div>
+    </div>
+    <div class="progress-labels">
+      <span>0% &mdash; FRAGMENTED</span>
+      <span>40% &mdash; MONITORING</span>
+      <span>70% &mdash; SIGNALLED</span>
+      <span>100% &mdash; CONFIRMED</span>
+    </div>
+
+    
+    <div class="consol-delta" style="color:var(--accent-green);background:rgba(63,185,80,0.1);">
+      <span class="arrow">&#9650;</span>
+      <span><strong>+35.0 pts</strong> from last report</span>
+    </div>
+
+    <div style="margin-top:12px;">
+      
+      <div class="mini-progress-row">
+        <div class="mini-progress-label">De la Espriella signal</div>
+        <div class="mini-progress-track"><div class="mini-progress-fill" style="width:20%;background:var(--accent-amber);"></div></div>
+        <div class="mini-progress-val" style="color:var(--accent-amber);">20</div>
+      </div>
+      <div style="font-size:11px;color:var(--text-muted);margin:-4px 0 8px 172px;">No endorsement signals yet, maintaining outsider position</div>
+      <div class="mini-progress-row">
+        <div class="mini-progress-label">Polling concentration</div>
+        <div class="mini-progress-track"><div class="mini-progress-fill" style="width:85%;background:var(--accent-blue);"></div></div>
+        <div class="mini-progress-val" style="color:var(--accent-blue);">85</div>
+      </div>
+      <div style="font-size:11px;color:var(--text-muted);margin:-4px 0 8px 172px;">Valencia clearly dominant right candidate after primary</div>
+      <div class="mini-progress-row">
+        <div class="mini-progress-label">Party signals (MIRA, etc.)</div>
+        <div class="mini-progress-track"><div class="mini-progress-fill" style="width:30%;background:var(--accent-amber);"></div></div>
+        <div class="mini-progress-val" style="color:var(--accent-amber);">30</div>
+      </div>
+      <div style="font-size:11px;color:var(--text-muted);margin:-4px 0 8px 172px;">MIRA and traditional parties watching, no commitments</div>
+      <div class="mini-progress-row">
+        <div class="mini-progress-label">Third candidate trajectory</div>
+        <div class="mini-progress-track"><div class="mini-progress-fill" style="width:25%;background:var(--accent-amber);"></div></div>
+        <div class="mini-progress-val" style="color:var(--accent-amber);">25</div>
+      </div>
+      <div style="font-size:11px;color:var(--text-muted);margin:-4px 0 8px 172px;">De la Espriella fading from 18% to 11%, good for Valencia</div>
+    </div>
+
+    <div class="grid-2" style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">MIRA Evangelical alignment</div>
+        <span class="badge badge-blue">NEUTRAL</span>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Centrão lean</div>
+        <span class="badge badge-blue">NEUTRAL</span>
+      </div>
+    </div>
+
+    <p style="font-size:13px;color:var(--text-secondary);margin-top:16px;line-height:1.7;">
+      Right consolidation proceeding naturally but not yet formalized
+    </p>
+  </div>
+
+  <div class="card" style="margin-top:12px;">
+    <h3 style="font-size:14px;font-weight:600;margin-bottom:12px;">CNE Events &amp; Legal</h3>
+    <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;line-height:1.5;">
+      The CNE (Consejo Nacional Electoral) is a political body, not a neutral court — partisan motivation should be flagged.
+    </div>
+    
+        <div class="signal-item">
+          <div style="flex:1;">
+            <div style="color:var(--text-primary);font-size:13px;">No significant rulings</div>
+            <div style="color:var(--text-muted);font-size:11px;margin-top:2px;">2026-04-07 &mdash; neutral</div>
+          </div>
+        </div>
+  </div>
+</section>
+
+<!-- TREND CHARTS -->
+<section class="section">
+  <div class="section-title">Trends</div>
+  <div class="grid-2" style="margin-bottom:16px;">
+    <div class="chart-container">
+      <h3>First Round Polling Trend</h3>
+      <div class="chart-wrapper"><canvas id="pollingChart"></canvas></div>
+    </div>
+    <div class="chart-container">
+      <h3>Polymarket Odds Trend</h3>
+      <div class="chart-wrapper"><canvas id="polyChart"></canvas></div>
+    </div>
+  </div>
+  <div class="chart-container">
+    <h3>Runoff Coalition Index Trend</h3>
+    <div class="chart-wrapper"><canvas id="coalChart"></canvas></div>
+  </div>
+</section>
+
+<!-- ISSUE SALIENCE & SECURITY -->
+<section class="section">
+  <div class="section-title">Issue Salience &amp; Security</div>
+  <div class="grid-2">
+    <div class="card">
+      <h3 style="font-size:14px;font-weight:600;margin-bottom:12px;">Issue Salience</h3>
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px;line-height:1.5;">
+        Which frame is dominating news volume right now? The dominant cleavage drives candidate behaviour.
+      </div>
+      
+      <div class="mini-progress-row">
+        <div class="mini-progress-label">Security <span class="badge badge-amber">DOMINANT</span></div>
+        <div class="mini-progress-track"><div class="mini-progress-fill" style="width:90%;background:var(--accent-red);"></div></div>
+        <div class="mini-progress-val" style="color:var(--accent-red);">HIGH</div>
+      </div>
+      <div class="mini-progress-row">
+        <div class="mini-progress-label">Economy</div>
+        <div class="mini-progress-track"><div class="mini-progress-fill" style="width:55%;background:var(--text-muted);"></div></div>
+        <div class="mini-progress-val" style="color:var(--text-muted);">MEDIUM</div>
+      </div>
+      <div class="mini-progress-row">
+        <div class="mini-progress-label">Anti-Establishment</div>
+        <div class="mini-progress-track"><div class="mini-progress-fill" style="width:55%;background:var(--text-muted);"></div></div>
+        <div class="mini-progress-val" style="color:var(--text-muted);">MEDIUM</div>
+      </div>
+      <div class="mini-progress-row">
+        <div class="mini-progress-label">Peace process</div>
+        <div class="mini-progress-track"><div class="mini-progress-fill" style="width:20%;background:var(--text-muted);"></div></div>
+        <div class="mini-progress-val" style="color:var(--text-muted);">LOW</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 style="font-size:14px;font-weight:600;margin-bottom:12px;">Security Incidents (baseline: ~81 social leaders/yr)</h3>
+      
+      <div class="event-item">
+        <div class="event-date">2026-03-26</div>
+        <div class="event-desc">Indigenous Governor Eutimio Valencia murdered in Chocó<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">Impact: state failure narrative &bull; Benefits: <span style="color:var(--accent-amber);">Cepeda</span></div></div>
+      </div>
+      <div class="event-item">
+        <div class="event-date">2026-03</div>
+        <div class="event-desc">Gulf Clan Plan Pistola kills 27 security forces<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">Impact: Total Peace discredited &bull; Benefits: <span style="color:var(--accent-amber);">De la Espriella</span></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:12px;">
+    <h3 style="font-size:14px;font-weight:600;margin-bottom:12px;">Structural Signals</h3>
+    
+      <div class="signal-item">
+        <span style="color:var(--text-secondary);">Security deterioration despite Total Peace</span>
+        <span class="badge badge-red">HIGH</span>
+      </div>
+      <div class="signal-item">
+        <span style="color:var(--text-secondary);">Trade war with US over repatriation</span>
+        <span class="badge badge-amber">MEDIUM</span>
+      </div>
+  </div>
+</section>
+
+<!-- ECONOMIC & MARKET -->
+<section class="section">
+  <div class="section-title">Economic &amp; Market</div>
+  <div class="econ-grid">
+    
+    <div class="econ-card">
+      <div class="econ-label">USD/COP</div>
+      <div class="econ-value" style="color:var(--text-primary);">$3,681</div>
+      <div class="econ-change"><span class="delta-up">&#9650; 0.4</span></div>
+      <div style="font-size:10px;color:var(--text-muted);margin-top:4px;"></div>
+    </div>
+    <div class="econ-card">
+      <div class="econ-label">CPI 12m</div>
+      <div class="econ-value" style="color:var(--accent-green);">5.29%</div>
+      <div class="econ-change"><span style="color:var(--text-muted);">&mdash;</span></div>
+      <div style="font-size:10px;color:var(--text-muted);margin-top:4px;">Threshold: 6.0%</div>
+    </div>
+    <div class="econ-card">
+      <div class="econ-label">Unemployment</div>
+      <div class="econ-value" style="color:var(--accent-green);">9.2%</div>
+      <div class="econ-change"><span style="color:var(--text-muted);">&mdash;</span></div>
+      <div style="font-size:10px;color:var(--text-muted);margin-top:4px;">Threshold: 11.5%</div>
+    </div>
+    <div class="econ-card">
+      <div class="econ-label">Banrep Rate</div>
+      <div class="econ-value" style="color:var(--text-primary);">11.25%</div>
+      <div class="econ-change"><span style="color:var(--text-muted);">&mdash;</span></div>
+      <div style="font-size:10px;color:var(--text-muted);margin-top:4px;"></div>
+    </div>
+    <div class="econ-card">
+      <div class="econ-label">Fiscal Deficit</div>
+      <div class="econ-value" style="color:var(--accent-green);">5.1% GDP</div>
+      <div class="econ-change"><span style="color:var(--text-muted);">&mdash;</span></div>
+      <div style="font-size:10px;color:var(--text-muted);margin-top:4px;">Threshold: 8.5% GDP</div>
+    </div>
+  </div>
+  
+
+  <div class="grid-2" style="margin-top:16px;">
+    <div class="card">
+      <h3 style="font-size:14px;font-weight:600;margin-bottom:12px;">Market Translation</h3>
+      
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+      <span class="badge badge-gray" style="font-size:12px;padding:4px 10px;">INSTITUTIONAL RISK</span>
+      <span style="font-size:13px;color:var(--text-secondary);">Central bank independence vs. government conflict</span>
+    </div>
+    <div class="grid-3" style="font-size:12px;">
+      <div><span style="color:var(--text-muted);">COP:</span><br><span style="color:var(--text-secondary);">Paradoxically strong despite political uncertainty</span></div>
+      <div><span style="color:var(--text-muted);">TES:</span><br><span style="color:var(--text-secondary);">Under pressure from BanRep-Government rift</span></div>
+      <div><span style="color:var(--text-muted);">Ecopetrol:</span><br><span style="color:var(--text-secondary);">Weakened by CEO scandal</span></div>
+    </div>
+    </div>
+    <div class="card">
+      <h3 style="font-size:14px;font-weight:600;margin-bottom:12px;">Governability Outlook</h3>
+      
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+      <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;">Reform passthrough</div>
+      <span class="badge badge-amber" style="font-size:12px;padding:4px 10px;">MEDIUM</span>
+      <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-left:12px;">Institutional risk</div>
+      <span class="badge badge-red" style="font-size:12px;padding:4px 10px;">HIGH</span>
+    </div>
+    <div class="grid-2" style="font-size:12px;margin-bottom:8px;">
+      <div>If Cepeda wins: <span class="badge badge-blue">LOW</span></div>
+      <div>If Valencia wins: <span class="badge badge-red">HIGH</span></div>
+    </div>
+    <p style="font-size:12px;color:var(--text-secondary);line-height:1.6;">BanRep-Government rift signals potential institutional confrontation regardless of winner</p>
+    </div>
+  </div>
+</section>
+
+<!-- ASSESSMENT -->
+<section class="section">
+  <div class="section-title">Assessment</div>
+
+  <div class="card" style="margin-bottom:16px;">
+    <h3 style="font-size:14px;font-weight:600;margin-bottom:12px;">Race State</h3>
+    <p class="assessment-text">
+      Security deterioration and institutional conflicts have tightened the race dramatically. Valencia&#x27;s post-primary surge reflects right consolidation and security concerns, while Cepeda struggles with incumbent party baggage. The BanRep-Government rift creates institutional uncertainty that benefits opposition candidates. Security frame currently dominates, helping both Valencia and De la Espriella at Cepeda&#x27;s expense.
+    </p>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3 style="font-size:14px;font-weight:600;margin-bottom:16px;">Scenario Probabilities</h3>
+      
+      <div class="scenario-row">
+        <div class="scenario-label">Cepeda wins</div>
+        <div class="scenario-track">
+          <div class="scenario-fill" style="width:40%;background:var(--cepeda);">40%</div>
+        </div>
+      </div>
+      <div class="scenario-row">
+        <div class="scenario-label">Valencia wins</div>
+        <div class="scenario-track">
+          <div class="scenario-fill" style="width:45%;background:var(--valencia);">45%</div>
+        </div>
+      </div>
+      <div class="scenario-row">
+        <div class="scenario-label">Surprise (third candidate)</div>
+        <div class="scenario-track">
+          <div class="scenario-fill" style="width:15%;background:var(--text-muted);">15%</div>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:8px;">2026-04-07</div>
+    </div>
+
+    <div class="card">
+      <h3 style="font-size:14px;font-weight:600;margin-bottom:12px;">Watch List &mdash; Next Period</h3>
+      
+      <div class="watch-item">
+        <div class="watch-num">1</div>
+        <div>
+          <div style="font-size:13px;color:var(--text-primary);font-weight:500;">De la Espriella endorsement signals</div>
+          
+        </div>
+      </div>
+      <div class="watch-item">
+        <div class="watch-num">2</div>
+        <div>
+          <div style="font-size:13px;color:var(--text-primary);font-weight:500;">Further security incidents</div>
+          
+        </div>
+      </div>
+      <div class="watch-item">
+        <div class="watch-num">3</div>
+        <div>
+          <div style="font-size:13px;color:var(--text-primary);font-weight:500;">BanRep-Government escalation</div>
+          
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px;">
+    <h3 style="font-size:14px;font-weight:600;margin-bottom:12px;">Event Log &mdash; This Period</h3>
+    
+    <div class="event-item">
+      <div class="event-date">2026-03-08</div>
+      <div class="event-desc">Valencia wins right primary with 3.24M votes</div>
+      <div class="event-tags"><span class="event-tag">Coalition</span><span class="event-tag">Polling</span></div>
+    </div>
+    <div class="event-item">
+      <div class="event-date">2026-03-26</div>
+      <div class="event-desc">Indigenous leader murdered in Chocó</div>
+      <div class="event-tags"><span class="event-tag">Issue_Salience</span></div>
+    </div>
+    <div class="event-item">
+      <div class="event-date">2026-03-31</div>
+      <div class="event-desc">BanRep hikes 100bps, Finance Minister walks out</div>
+      <div class="event-tags"><span class="event-tag">Economic</span><span class="event-tag">Governability</span></div>
+    </div>
+    <div class="event-item">
+      <div class="event-date">2026-04-04</div>
+      <div class="event-desc">Ecopetrol CEO forced out in scandal</div>
+      <div class="event-tags"><span class="event-tag">Market</span></div>
+    </div>
+
+    <!-- Electoral Timeline -->
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);">
+      <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">Electoral Timeline</div>
+      <div class="timeline-bar">
+        <div class="timeline-track">
+          <div class="timeline-fill" style="width:56%;"></div>
+          <div class="timeline-marker" style="left:56%;"></div>
+        </div>
+      </div>
+      <div class="timeline-labels">
+        <span>Jan 2026<br>Pre-campaign</span>
+        <span>Mar 8<br>Primary</span>
+        <span style="color:var(--accent-blue);font-weight:600;">Apr 7 &mdash; TODAY</span>
+        <span>May 31<br>1st round</span>
+        <span>Jun 21<br>Runoff</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section class="section">
+  <div class="section-title">About This Monitor</div>
+  <div class="about-section">
+    <h3>What is this?</h3>
+    <p>
+      The Colombia 2026 Election Monitor is an AI-powered political intelligence dashboard that combines <strong>Gemini CLI</strong> (Google) for real-time web search with <strong>Claude</strong> (Anthropic) for structured analysis. It tracks the May 31 first round and June 21 runoff between left-wing Iván Cepeda (Pacto Histórico), centre-right Paloma Valencia (Centro Democrático), and far-right outsider Abelardo de la Espriella.
+    </p>
+
+    <h4>Colombia-specific framework</h4>
+    <ul>
+      <li><strong>Voto de opinión vs. maquinaria</strong> — Presidential races are opinion-driven; congressional races are machine-driven. Candidates relying on machines are ceiling-limited (Roy Barreras 2026 case).</li>
+      <li><strong>Rejection rates (rechazo)</strong> — Tracked alongside vote intention. Often the runoff ceiling more than the first-round vote share.</li>
+      <li><strong>Right-underestimation flag</strong> — Colombian polls systematically underestimated the right in 2022 (Hernández surge). Triggered if Valencia polls below her primary share.</li>
+      <li><strong>Runoff math</strong> — Valencia projected = base + (De la Espriella × transfer estimate). Transfer = 0.5 monitoring, 0.7 signalled, 0.85 confirmed.</li>
+      <li><strong>Mechanism tagging</strong> — Every shift tagged as opinion wave / machine activation / viral / clan endorsement / external shock.</li>
+      <li><strong>Dominant cleavage</strong> — SECURITY / ECONOMY / ANTI-ESTABLISHMENT / PEACE — what is deciding the race RIGHT NOW.</li>
+      <li><strong>CNE awareness</strong> — The Consejo Nacional Electoral is a political body, not a neutral court.</li>
+    </ul>
+
+    <h4>Pollster tiering</h4>
+    <p>
+      Polls are credibility-weighted: <strong>Tier A</strong> (Invamer, GAD3) = 1.0 weight; <strong>Tier B</strong> (AtlasIntel, CNC) = 0.7; <strong>Tier C</strong> (Guarumo-Ecoanalítica) = 0.3.
+    </p>
+
+    <h4>How it works</h4>
+    <p>
+      Each report runs an automated pipeline: Gemini CLI searches AwesomeAPI (USD/COP), Banco de la República, polling sources, and Colombian news. Claude applies the framework above, producing the structured analysis you see here. Static candidate metadata is stored in <code>history.json</code> and merged in by the HTML generator to minimize tokens.
+    </p>
+
+    <h4>How to use it wisely</h4>
+    <ul>
+      <li>This is a <strong>monitoring tool</strong>, not a prediction engine</li>
+      <li>Polling has margins of error — within &plusmn;2-3 points = noise</li>
+      <li>Polymarket odds reflect trader sentiment, not election outcomes</li>
+      <li>News sources are AI-searched — verify URLs before citing</li>
+      <li>Updated weekly (or as scheduled) — captures snapshots, not real-time data</li>
+    </ul>
+
+    <h4>Built with</h4>
+    <p>
+      <strong>Gemini CLI</strong> (Google) for web search &bull;
+      <strong>Claude API</strong> (Anthropic) for analysis &bull;
+      <strong>Python</strong> for orchestration &bull;
+      <strong>Chart.js</strong> for visualization &bull;
+      <strong>AwesomeAPI</strong> for FX data
+    </p>
+  </div>
+
+  <div class="disclaimer">
+    Independent analysis tool. Not affiliated with any political party, campaign, or government entity.<br>
+    Last updated: April 07, 2026 &bull; Report #1
+  </div>
+</section>
+
+</main>
+
+<script>
+Chart.defaults.color = '#8b949e';
+Chart.defaults.borderColor = 'rgba(48,54,61,0.6)';
+Chart.defaults.font.family = "'Inter', sans-serif";
+Chart.defaults.font.size = 11;
+Chart.defaults.plugins.legend.labels.boxWidth = 12;
+Chart.defaults.plugins.legend.labels.padding = 16;
+
+const chartTooltip = {
+  backgroundColor: '#1c2129',
+  borderColor: '#30363d',
+  borderWidth: 1,
+  titleColor: '#e6edf3',
+  bodyColor: '#8b949e',
+  callbacks: { label: ctx => ctx.dataset.label + ': ' + ctx.parsed.y + '%' }
+};
+
+// Polling Trend Chart
+const pollLabels = ["Apr 7"];
+const pollDatasets = [{"label": "Cepeda", "data": [43], "borderColor": "#d32f2f", "borderWidth": 2.5, "pointRadius": 4, "pointBackgroundColor": "#d32f2f", "tension": 0.3, "fill": false}, {"label": "Valencia", "data": [41], "borderColor": "#1565c0", "borderWidth": 2.5, "pointRadius": 4, "pointBackgroundColor": "#1565c0", "tension": 0.3, "fill": false}, {"label": "De la Espriella", "data": [11], "borderColor": "#e65100", "borderWidth": 2.5, "pointRadius": 4, "pointBackgroundColor": "#e65100", "tension": 0.3, "fill": false}];
+if (pollLabels.length > 0) {
+  new Chart(document.getElementById('pollingChart'), {
+    type: 'line',
+    data: { labels: pollLabels, datasets: pollDatasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      scales: {
+        y: {
+          min: 0, max: 60,
+          grid: { color: 'rgba(48,54,61,0.4)' },
+          ticks: { callback: v => v + '%' }
+        },
+        x: { grid: { color: 'rgba(48,54,61,0.2)' } }
+      },
+      plugins: { tooltip: chartTooltip }
+    }
+  });
+}
+
+// Polymarket Trend Chart
+const polyLabels = ["Dec 15", "Jan 15", "Feb 15", "Mar 8", "Apr 1", "Apr 7"];
+const polyDatasets = [{"label": "Cepeda", "data": [55, 52, 48, 45, 43, 43], "borderColor": "#d32f2f", "borderWidth": 2.5, "pointRadius": 4, "pointBackgroundColor": "#d32f2f", "tension": 0.3, "fill": false}, {"label": "Valencia", "data": [22, 25, 28, 36, 41, 41], "borderColor": "#1565c0", "borderWidth": 2.5, "pointRadius": 4, "pointBackgroundColor": "#1565c0", "tension": 0.3, "fill": false}, {"label": "De la Espriella", "data": [12, 14, 18, 14, 11, 11], "borderColor": "#e65100", "borderWidth": 2.5, "pointRadius": 4, "pointBackgroundColor": "#e65100", "tension": 0.3, "fill": false}, {"label": "Sergio Fajardo", "data": [4, 3, 2, 1, 1, null], "borderColor": "#7c4dff", "borderWidth": 1.5, "pointRadius": 2, "pointBackgroundColor": "#7c4dff", "tension": 0.3, "fill": false, "borderDash": [4, 4]}, {"label": "Claudia L\u00f3pez", "data": [3, 3, 2, 1, 1, null], "borderColor": "#66bb6a", "borderWidth": 1.5, "pointRadius": 2, "pointBackgroundColor": "#66bb6a", "tension": 0.3, "fill": false, "borderDash": [4, 4]}];
+if (polyLabels.length > 0) {
+  new Chart(document.getElementById('polyChart'), {
+    type: 'line',
+    data: { labels: polyLabels, datasets: polyDatasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      scales: {
+        y: {
+          min: 0, max: 65,
+          grid: { color: 'rgba(48,54,61,0.4)' },
+          ticks: { callback: v => v + '%' }
+        },
+        x: { grid: { color: 'rgba(48,54,61,0.2)' } }
+      },
+      plugins: { tooltip: chartTooltip }
+    }
+  });
+}
+
+// Coalition Index Trend Chart
+const coalLabels = ["Apr 7"];
+const coalData = [35];
+if (coalLabels.length > 0) {
+  new Chart(document.getElementById('coalChart'), {
+    type: 'line',
+    data: {
+      labels: coalLabels,
+      datasets: [{"label": "Coalition Index", "data": [35], "borderColor": "#58a6ff", "backgroundColor": "rgba(88,166,255,0.1)", "borderWidth": 2.5, "pointRadius": 5, "pointBackgroundColor": "#58a6ff", "tension": 0.3, "fill": true}]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      scales: {
+        y: {
+          min: 0, max: 100,
+          grid: { color: 'rgba(48,54,61,0.4)' },
+          ticks: { callback: v => v + '%' }
+        },
+        x: { grid: { color: 'rgba(48,54,61,0.2)' } }
+      },
+      plugins: {
+        tooltip: {
+          backgroundColor: '#1c2129',
+          borderColor: '#30363d',
+          borderWidth: 1,
+          titleColor: '#e6edf3',
+          bodyColor: '#8b949e',
+          callbacks: { label: ctx => 'Index: ' + ctx.parsed.y + '%' }
+        }
+      }
+    },
+    plugins: [{
+      id: 'coalBands',
+      beforeDraw(chart) {
+        const { ctx, chartArea: { left, right, top, bottom }, scales: { y } } = chart;
+        const bands = [
+          { from: 0, to: 40, color: 'rgba(248,81,73,0.06)' },
+          { from: 40, to: 70, color: 'rgba(210,153,34,0.06)' },
+          { from: 70, to: 100, color: 'rgba(63,185,80,0.06)' }
+        ];
+        bands.forEach(b => {
+          const yTop = y.getPixelForValue(b.to);
+          const yBottom = y.getPixelForValue(b.from);
+          ctx.fillStyle = b.color;
+          ctx.fillRect(left, yTop, right - left, yBottom - yTop);
+        });
+        [40, 70].forEach(val => {
+          const yPos = y.getPixelForValue(val);
+          ctx.strokeStyle = 'rgba(48,54,61,0.6)';
+          ctx.lineWidth = 1;
+          ctx.setLineDash([4, 4]);
+          ctx.beginPath();
+          ctx.moveTo(left, yPos);
+          ctx.lineTo(right, yPos);
+          ctx.stroke();
+          ctx.setLineDash([]);
+        });
+        ctx.fillStyle = '#656d76';
+        ctx.font = '10px Inter, sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText('FRAGMENTED', left + 6, y.getPixelForValue(20) + 4);
+        ctx.fillText('MONITORING', left + 6, y.getPixelForValue(55) + 4);
+        ctx.fillText('SIGNALLED/CONFIRMED', left + 6, y.getPixelForValue(85) + 4);
+      }
+    }]
+  });
+}
+</script>
+
+</body>
+</html>
