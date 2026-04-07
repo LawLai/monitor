@@ -33,7 +33,6 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* ── Top bar ── */
 .topbar {
   border-bottom: 1px solid var(--border);
   padding: 0 40px;
@@ -48,298 +47,70 @@ body {
   z-index: 10;
 }
 
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  text-decoration: none;
-}
+.brand { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+.logo-mark { width: 40px; height: 40px; flex-shrink: 0; }
+.brand-name { font-size: 13px; font-weight: 700; letter-spacing: 0.08em; color: #fff; text-transform: uppercase; }
+.brand-sub { font-size: 9px; font-weight: 500; letter-spacing: 0.18em; color: var(--muted); text-transform: uppercase; margin-top: 1px; font-style: italic; }
+.topbar-right { font-size: 11px; color: var(--muted); letter-spacing: 0.04em; }
+.topbar-right span { color: var(--green); font-weight: 600; margin-right: 4px; }
 
-.logo-mark {
-  width: 32px;
-  height: 32px;
-  flex-shrink: 0;
-}
+.hero { max-width: 960px; margin: 0 auto; padding: 72px 40px 48px; border-bottom: 1px solid var(--border); }
+.hero-eyebrow { font-size: 11px; font-weight: 600; letter-spacing: 0.2em; color: var(--blue); text-transform: uppercase; margin-bottom: 16px; }
+.hero-title { font-size: 38px; font-weight: 800; letter-spacing: -1px; line-height: 1.1; color: #fff; margin-bottom: 16px; }
+.hero-title em { font-style: normal; color: transparent; -webkit-text-stroke: 1px rgba(255,255,255,0.3); }
+.hero-desc { font-size: 12px; color: var(--muted); line-height: 1.7; max-width: 480px; }
 
-.brand-text {}
-.brand-name {
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  color: #fff;
-  text-transform: uppercase;
-}
-.brand-sub {
-  font-size: 9px;
-  font-weight: 500;
-  letter-spacing: 0.18em;
-  color: var(--muted);
-  text-transform: uppercase;
-  margin-top: 1px;
-}
+.grid-section { max-width: 960px; margin: 0 auto; padding: 48px 40px 80px; }
+.grid-label { font-size: 10px; font-weight: 700; letter-spacing: 0.2em; color: var(--muted2); text-transform: uppercase; margin-bottom: 24px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
 
-.topbar-right {
-  font-size: 11px;
-  color: var(--muted);
-  letter-spacing: 0.04em;
-}
-.topbar-right span {
-  color: var(--green);
-  font-weight: 600;
-  margin-right: 4px;
-}
-
-/* ── Hero ── */
-.hero {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 72px 40px 48px;
-  border-bottom: 1px solid var(--border);
-}
-
-.hero-eyebrow {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.2em;
-  color: var(--blue);
-  text-transform: uppercase;
-  margin-bottom: 16px;
-}
-
-.hero-title {
-  font-size: 38px;
-  font-weight: 800;
-  letter-spacing: -1px;
-  line-height: 1.1;
-  color: #fff;
-  margin-bottom: 16px;
-}
-
-.hero-title em {
-  font-style: normal;
-  color: transparent;
-  -webkit-text-stroke: 1px rgba(255,255,255,0.3);
-}
-
-.hero-desc {
-  font-size: 12px;
-  color: var(--muted);
-  line-height: 1.7;
-  max-width: 480px;
-}
-
-/* ── Grid ── */
-.grid-section {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 48px 40px 80px;
-}
-
-.grid-label {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.2em;
-  color: var(--muted2);
-  text-transform: uppercase;
-  margin-bottom: 24px;
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 16px;
-}
-
-/* ── Card ── */
 .card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 24px;
-  text-decoration: none;
-  color: inherit;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
-  position: relative;
-  overflow: hidden;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+  padding: 24px; text-decoration: none; color: inherit; display: flex;
+  flex-direction: column; gap: 0; transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+  position: relative; overflow: hidden;
 }
-
-.card::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 2px;
-  background: var(--card-accent, var(--blue));
-  opacity: 0;
-  transition: opacity 0.2s;
-}
-
-.card:hover {
-  border-color: var(--border2);
-  background: var(--surface2);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-}
-
-.card:hover::before {
-  opacity: 1;
-}
-
+.card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: var(--card-accent, var(--blue)); opacity: 0; transition: opacity 0.2s; }
+.card:hover { border-color: var(--border2); background: var(--surface2); box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
+.card:hover::before { opacity: 1; }
 .card-election { --card-accent: #2563eb; }
 .card-conflict  { --card-accent: #ef4444; }
 
-/* Card header */
-.card-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  margin-bottom: 16px;
-}
+.card-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 16px; }
+.card-flag img { width: 32px; height: 24px; border-radius: 3px; object-fit: cover; display: block; }
+.card-flag.dual { display: flex; gap: 4px; }
 
-.card-flag img {
-  width: 32px;
-  height: 24px;
-  border-radius: 3px;
-  object-fit: cover;
-  display: block;
-}
+.card-type-badge { font-size: 9px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; padding: 3px 7px; border-radius: 4px; background: var(--blue-glow); color: #60a5fa; border: 1px solid rgba(37,99,235,0.2); }
+.card-type-badge.conflict { background: rgba(239,68,68,0.12); color: #f87171; border-color: rgba(239,68,68,0.2); }
 
-.card-type-badge {
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  padding: 3px 7px;
-  border-radius: 4px;
-  background: var(--blue-glow);
-  color: #60a5fa;
-  border: 1px solid rgba(37,99,235,0.2);
-}
-.card-type-badge.conflict {
-  background: rgba(239,68,68,0.12);
-  color: #f87171;
-  border-color: rgba(239,68,68,0.2);
-}
+.card-title { font-size: 16px; font-weight: 700; color: #fff; line-height: 1.3; margin-bottom: 6px; }
+.card-intro { font-size: 12.5px; color: var(--muted); line-height: 1.6; margin-bottom: 16px; flex: 1; }
 
-/* Card title */
-.card-title {
-  font-size: 16px;
-  font-weight: 700;
-  color: #fff;
-  line-height: 1.3;
-  margin-bottom: 6px;
-}
+.snapshot { background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 7px; padding: 12px 14px; margin-bottom: 12px; }
+.snapshot-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.snapshot-label { font-size: 9px; font-weight: 700; letter-spacing: 0.18em; color: var(--muted2); text-transform: uppercase; }
 
-.card-intro {
-  font-size: 12.5px;
-  color: var(--muted);
-  line-height: 1.6;
-  margin-bottom: 16px;
-  flex: 1;
-}
+.status-pill { font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; padding: 2px 7px; border-radius: 20px; }
+.pill-amber { background: rgba(245,158,11,0.15); color: var(--amber); }
+.pill-red   { background: rgba(239,68,68,0.15);  color: var(--red); }
+.pill-blue  { background: var(--blue-glow);       color: #60a5fa; }
+.pill-green { background: rgba(34,197,94,0.12);   color: var(--green); }
 
-/* Snapshot box */
-.snapshot {
-  background: rgba(0,0,0,0.3);
-  border: 1px solid var(--border);
-  border-radius: 7px;
-  padding: 12px 14px;
-  margin-bottom: 12px;
-}
-
-.snapshot-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 8px;
-}
-
-.snapshot-label {
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  color: var(--muted2);
-  text-transform: uppercase;
-}
-
-.status-pill {
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  padding: 2px 7px;
-  border-radius: 20px;
-}
-.pill-amber  { background: rgba(245,158,11,0.15); color: var(--amber); }
-.pill-red    { background: rgba(239,68,68,0.15);  color: var(--red); }
-.pill-blue   { background: var(--blue-glow);       color: #60a5fa; }
-.pill-green  { background: rgba(34,197,94,0.12);   color: var(--green); }
-
-.snapshot-line {
-  font-size: 11.5px;
-  color: #94a8c0;
-  line-height: 1.7;
-}
-.snapshot-line strong {
-  color: var(--text);
-  font-weight: 600;
-}
-.snapshot-line .hi { color: #fff; font-weight: 700; }
+.snapshot-line { font-size: 11.5px; color: #94a8c0; line-height: 1.7; }
+.snapshot-line strong { color: var(--text); font-weight: 600; }
+.snapshot-line .hi  { color: #fff; font-weight: 700; }
 .snapshot-line .dim { color: var(--muted); }
-.snapshot-divider {
-  border: none;
-  border-top: 1px solid var(--border);
-  margin: 7px 0;
-}
+.snapshot-divider { border: none; border-top: 1px solid var(--border); margin: 7px 0; }
 
-/* Footer row */
-.card-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
+.card-footer { display: flex; align-items: center; justify-content: space-between; }
+.card-updated { font-size: 10px; color: var(--muted2); letter-spacing: 0.03em; }
+.card-arrow { font-size: 12px; color: var(--muted2); transition: color 0.2s, transform 0.2s; }
+.card:hover .card-arrow { color: #60a5fa; transform: translateX(3px); }
 
-.card-updated {
-  font-size: 10px;
-  color: var(--muted2);
-  letter-spacing: 0.03em;
-}
-
-.card-arrow {
-  font-size: 12px;
-  color: var(--muted2);
-  transition: color 0.2s, transform 0.2s;
-}
-.card:hover .card-arrow {
-  color: #60a5fa;
-  transform: translateX(3px);
-}
-
-/* ── Footer ── */
-.page-footer {
-  border-top: 1px solid var(--border);
-  padding: 24px 40px;
-  max-width: 960px;
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.page-footer-left {
-  font-size: 11px;
-  color: var(--muted2);
-}
-.page-footer-left strong {
-  color: var(--muted);
-  font-weight: 500;
-}
-.page-footer-right {
-  font-size: 11px;
-  color: var(--muted2);
-}
+.page-footer { border-top: 1px solid var(--border); padding: 24px 40px; max-width: 960px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+.page-footer-left { font-size: 11px; color: var(--muted2); }
+.page-footer-left strong { color: var(--muted); font-weight: 500; }
+.page-footer-right { font-size: 11px; color: var(--muted2); }
 
 @media (max-width: 600px) {
   .hero { padding: 48px 20px 36px; }
@@ -351,12 +122,9 @@ body {
 </head>
 <body>
 
-<!-- ── Top bar ── -->
 <header class="topbar">
   <a class="brand" href="#">
-    <!-- LL Logo Mark -->
-    <!-- Agent Badge Logo -->
-    <svg class="logo-mark" viewBox="0 0 40 40" width="40" height="40" xmlns="http://www.w3.org/2000/svg">
+    <svg class="logo-mark" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
       <circle cx="20" cy="20" r="19" fill="#0c1a35" stroke="#c9962a" stroke-width="1.8"/>
       <circle cx="20" cy="20" r="15.5" fill="none" stroke="#c9962a" stroke-width="0.5" stroke-dasharray="2.5 2"/>
       <text x="20" y="13.5" font-family="Inter,Arial,sans-serif" font-size="4.8" font-weight="700" fill="#c9962a" text-anchor="middle" letter-spacing="2.2">AGENT</text>
@@ -367,26 +135,22 @@ body {
     </svg>
     <div class="brand-text">
       <div class="brand-name">Agent LL's</div>
-      <div class="brand-sub" style="font-style:italic;letter-spacing:0.06em;">Chupe de jaiba</div>
+      <div class="brand-sub">Chupe de jaiba</div>
     </div>
   </a>
-  <div class="topbar-right"><span>●</span> 3 monitors active</div></header>
+  <div class="topbar-right"><span>&#9679;</span> 3 monitors active</div>
+</header>
 
-<!-- ── Hero ── -->
 <section class="hero">
   <div class="hero-eyebrow">Intelligence Briefings</div>
   <h1 class="hero-title">Chupe De Jaiba<br><em>made by Agent LL</em></h1>
-  <p class="hero-desc">
-    AI-powered macro event monitors — a project to leverage Agentic AI.
-  </p>
+  <p class="hero-desc">AI-powered macro event monitors &mdash; a project to leverage Agentic AI.</p>
 </section>
 
-<!-- ── Cards ── -->
 <section class="grid-section">
   <div class="grid-label">Active Monitors</div>
   <div class="grid">
 
-    <!-- Brazil -->
     <a class="card card-election" href="brazil_2026_election_monitor.html">
       <div class="card-header">
         <div class="card-flag"><img src="https://flagcdn.com/br.svg" alt="Brazil"></div>
@@ -397,83 +161,77 @@ body {
       <div class="snapshot">
         <div class="snapshot-header">
           <span class="snapshot-label">Latest Snapshot</span>
-          <span class="status-pill pill-amber">Competitive</span>
+          <span class="status-pill pill-amber">COMPETITIVE</span>
         </div>
-        <div class="snapshot-line">
-          <span class="hi">Lula 42%</span> &nbsp;·&nbsp; <span class="hi">Flávio 38%</span> &nbsp;·&nbsp; <span class="dim">Caiado 8%</span>
-        </div>
+        <div class="snapshot-line"><span class="hi">Lula 42%</span> &nbsp;·&nbsp; <span class="">Flávio Bolsonaro 38%</span> &nbsp;·&nbsp; <span class="">Caiado 8%</span></div>
         <hr class="snapshot-divider">
         <div class="snapshot-line">
-          Consolidation Index <strong>98%</strong> &nbsp;·&nbsp; <span style="color:#f87171;">Econ Alert</span>
+          Consolidation Index <strong>98%</strong> &nbsp;&middot;&nbsp; <span style="color:#f87171;">Econ Alert</span>
         </div>
       </div>
       <div class="card-footer">
         <span class="card-updated">Updated Apr 7, 2026</span>
-        <span class="card-arrow">→</span>
+        <span class="card-arrow">&rarr;</span>
       </div>
     </a>
 
-    <!-- Colombia -->
     <a class="card card-election" href="colombia_2026_election_monitor.html">
       <div class="card-header">
         <div class="card-flag"><img src="https://flagcdn.com/co.svg" alt="Colombia"></div>
         <span class="card-type-badge">Election</span>
       </div>
       <div class="card-title">Colombia 2026</div>
-      <div class="card-intro">Monitors the May 31 first round — Cepeda vs Valencia, runoff coalition index, security cleavage dynamics, and Polymarket odds since August 2025.</div>
+      <div class="card-intro">Monitors the May 31 first round &mdash; Cepeda vs Valencia, runoff coalition index, security cleavage dynamics, and Polymarket odds since August 2025.</div>
       <div class="snapshot">
         <div class="snapshot-header">
           <span class="snapshot-label">Latest Snapshot</span>
-          <span class="status-pill pill-amber">Tossup</span>
+          <span class="status-pill pill-amber">TOSSUP</span>
         </div>
-        <div class="snapshot-line">
-          <span class="hi">Cepeda 41%</span> &nbsp;·&nbsp; <span class="hi">Valencia 40%</span> &nbsp;·&nbsp; <span class="dim">DLE 16%</span>
-        </div>
+        <div class="snapshot-line"><span class="hi">Cepeda 41.0%</span> &nbsp;·&nbsp; <span class="">Valencia 39.9%</span> &nbsp;·&nbsp; <span class="dim">DLE 16.0%</span></div>
         <hr class="snapshot-divider">
         <div class="snapshot-line">
-          Coalition Index <strong>42%</strong> &nbsp;·&nbsp; Cleavage <strong>SECURITY</strong>
+          Coalition Index <strong>42%</strong> &nbsp;&middot;&nbsp; Cleavage <strong>SECURITY</strong>
         </div>
       </div>
       <div class="card-footer">
         <span class="card-updated">Updated Apr 7, 2026</span>
-        <span class="card-arrow">→</span>
+        <span class="card-arrow">&rarr;</span>
       </div>
     </a>
 
-    <!-- Iran -->
     <a class="card card-conflict" href="us_iran_monitor_live.html">
       <div class="card-header">
-        <div class="card-flag"><img src="https://flagcdn.com/us.svg" alt="US" style="width:28px;height:18px;margin-bottom:2px;"> <img src="https://flagcdn.com/ir.svg" alt="Iran" style="width:28px;height:18px;"></div>
+        <div class="card-flag dual">
+          <img src="https://flagcdn.com/us.svg" alt="US" style="width:28px;height:18px;">
+          <img src="https://flagcdn.com/ir.svg" alt="Iran" style="width:28px;height:18px;">
+        </div>
         <span class="card-type-badge conflict">Conflict</span>
       </div>
-      <div class="card-title">US–Iran War</div>
+      <div class="card-title">US&ndash;Iran War</div>
       <div class="card-intro">Game-theory escalation tracker using RSS intelligence feeds, actor objective mapping, and scenario probability modelling.</div>
       <div class="snapshot">
         <div class="snapshot-header">
-          <span class="snapshot-label">Latest Snapshot · Day 34</span>
+          <span class="snapshot-label">Latest Snapshot &middot; Day 34</span>
           <span class="status-pill pill-red">Escalating</span>
         </div>
         <div class="snapshot-line">
-          Escalation <span class="hi">88%</span> &nbsp;·&nbsp; Ceasefire <span class="dim">12%</span>
+          Escalation <span class="hi">88%</span> &nbsp;&middot;&nbsp; Ceasefire <span class="dim">12%</span>
         </div>
         <hr class="snapshot-divider">
-        <div class="snapshot-line">
-          Strait of Hormuz pressure &nbsp;·&nbsp; IRGC posture elevated
-        </div>
+        <div class="snapshot-line">Strait of Hormuz pressure &nbsp;&middot;&nbsp; IRGC posture elevated</div>
       </div>
       <div class="card-footer">
         <span class="card-updated">Updated Apr 2, 2026</span>
-        <span class="card-arrow">→</span>
+        <span class="card-arrow">&rarr;</span>
       </div>
     </a>
 
   </div>
 </section>
 
-<!-- ── Page footer ── -->
 <footer class="page-footer">
   <div class="page-footer-left">
-    <strong>Agent LL's Chupe de jaiba</strong> &nbsp;·&nbsp; lawlai.github.io/monitor
+    <strong>Agent LL's Chupe de jaiba</strong> &nbsp;&middot;&nbsp; lawlai.github.io/monitor
   </div>
   <div class="page-footer-right">Powered by Gemini search + Claude analysis</div>
 </footer>
