@@ -694,6 +694,30 @@ def run_update(client: anthropic.Anthropic, open_browser: bool = False) -> bool:
     OUTPUT_HTML.write_text(updated_html, encoding="utf-8")
     print(f"  ✓ Saved → {OUTPUT_HTML}")
 
+    # Write sidecar JSON for generate_index.py
+    import re as _re
+    _day_match = _re.search(r"day(\d+)", SOURCE_HTML.stem, _re.IGNORECASE)
+    _day = int(_day_match.group(1)) if _day_match else "?"
+    _now = datetime.now()
+    _date_str = f"{_now.strftime('%b')} {_now.day}, {_now.year}"
+    status_path = Path(__file__).parent / "iran_status.json"
+    status_path.write_text(json.dumps({
+        "day": _day,
+        "escalation_pct": data.get("escalation", "?"),
+        "ceasefire_pct": data.get("ceasefire_pct", "?"),
+        "updated": _date_str,
+    }, indent=2), encoding="utf-8")
+
+    # Regenerate landing page with fresh Iran stats
+    try:
+        import importlib.util, sys as _sys
+        _spec = importlib.util.spec_from_file_location("generate_index", Path(__file__).parent / "generate_index.py")
+        _mod  = importlib.util.module_from_spec(_spec)
+        _spec.loader.exec_module(_mod)
+        _mod.generate_index()
+    except Exception as _e:
+        print(f"  [index] Warning: could not regenerate landing page: {_e}")
+
     # Push to GitHub so the live link updates for viewers
     push_to_github(data)
 
@@ -701,7 +725,7 @@ def run_update(client: anthropic.Anthropic, open_browser: bool = False) -> bool:
         webbrowser.open(OUTPUT_HTML.resolve().as_uri())
 
     # ── Done banner ───────────────────────────────────────────────────────────
-    live_url = "https://lawlai.github.io/iran-monitor/us_iran_monitor_live.html"
+    live_url = "https://lawlai.github.io/monitor/us_iran_monitor_live.html"
     now_str  = datetime.now().strftime("%H:%M:%S")
     print(f"""
 ╔══════════════════════════════════════════════════════╗
@@ -731,7 +755,7 @@ def push_to_github(data: dict):
 
         folder = Path(__file__).parent
 
-        subprocess.run(["git", "add", str(OUTPUT_HTML)], cwd=folder, check=True)
+        subprocess.run(["git", "add", str(OUTPUT_HTML), "iran_status.json", "index.html"], cwd=folder, check=True)
         subprocess.run(["git", "commit", "-m", msg],     cwd=folder, check=True)
         subprocess.run(["git", "push"],                  cwd=folder, check=True)
 
