@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LawLai Political Intelligence Monitors</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', sans-serif;
+  background: #0d1117;
+  color: #e6edf3;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 60px 20px;
+}
+.header {
+  text-align: center;
+  margin-bottom: 48px;
+}
+.header h1 {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  margin-bottom: 8px;
+}
+.header p {
+  font-size: 14px;
+  color: #8b949e;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 340px));
+  gap: 20px;
+  max-width: 1080px;
+  width: 100%;
+}
+.card {
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 12px;
+  padding: 28px;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.15s, transform 0.15s;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.card:hover {
+  border-color: #58a6ff;
+  transform: translateY(-2px);
+}
+.card-flag { font-size: 40px; line-height: 1; }
+.card-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: #e6edf3;
+}
+.card-subtitle {
+  font-size: 13px;
+  color: #8b949e;
+  line-height: 1.5;
+}
+.card-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 20px;
+  margin-top: 4px;
+  width: fit-content;
+}
+.badge-election { background: rgba(88,166,255,0.15); color: #58a6ff; }
+.badge-conflict  { background: rgba(248,81,73,0.15);  color: #f85149; }
+.footer {
+  margin-top: 60px;
+  font-size: 12px;
+  color: #484f58;
+  text-align: center;
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Political Intelligence Monitors</h1>
+  <p>AI-powered dashboards — updated daily</p>
+</div>
+
+<div class="grid">
+
+  <a class="card" href="brazil_2026_election_monitor.html">
+    <div class="card-flag">&#x1F1E7;&#x1F1F7;</div>
+    <div class="card-title">Brazil 2026 Election Monitor</div>
+    <div class="card-subtitle">Presidential race tracker — polling, Polymarket odds, right-wing consolidation index, and economic alerts.</div>
+    <span class="card-badge badge-election">Election — Oct 2026</span>
+  </a>
+
+  <a class="card" href="colombia_2026_election_monitor.html">
+    <div class="card-flag">&#x1F1E8;&#x1F1F4;</div>
+    <div class="card-title">Colombia 2026 Election Monitor</div>
+    <div class="card-subtitle">First round May 31 · Cepeda vs Valencia · Runoff coalition tracker, security cleavage analysis, and Polymarket trend.</div>
+    <span class="card-badge badge-election">Election — May 2026</span>
+  </a>
+
+  <a class="card" href="us_iran_monitor_live.html">
+    <div class="card-flag">&#x1F30D;</div>
+    <div class="card-title">US–Iran War Monitor</div>
+    <div class="card-subtitle">Game-theory escalation tracker — ceasefire vs escalation probabilities, RSS news feed, and live scenario analysis.</div>
+    <span class="card-badge badge-conflict">Conflict Monitor — Live</span>
+  </a>
+
+</div>
+
+<div class="footer">
+  lawlai.github.io/monitor &nbsp;·&nbsp; Data updated daily via Gemini + Claude API
+</div>
+
+</body>
+</html>
