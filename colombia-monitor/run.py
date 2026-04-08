@@ -78,11 +78,8 @@ def push_to_github(analysis):
 
         # Regenerate landing page with fresh stats from all monitors
         try:
-            import importlib.util
-            _spec = importlib.util.spec_from_file_location("generate_index", REPO_ROOT / "generate_index.py")
-            _mod  = importlib.util.module_from_spec(_spec)
-            _spec.loader.exec_module(_mod)
-            _mod.generate_index()
+            subprocess.run([sys.executable, str(REPO_ROOT / "generate_index.py")],
+                           cwd=str(REPO_ROOT), check=True)
         except Exception as _e:
             print(f"  [index] Warning: {_e}")
 

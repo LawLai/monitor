@@ -710,11 +710,9 @@ def run_update(client: anthropic.Anthropic, open_browser: bool = False) -> bool:
 
     # Regenerate landing page with fresh Iran stats
     try:
-        import importlib.util, sys as _sys
-        _spec = importlib.util.spec_from_file_location("generate_index", Path(__file__).parent / "generate_index.py")
-        _mod  = importlib.util.module_from_spec(_spec)
-        _spec.loader.exec_module(_mod)
-        _mod.generate_index()
+        import subprocess as _sp, sys as _sys
+        _sp.run([_sys.executable, str(Path(__file__).parent / "generate_index.py")],
+                cwd=str(Path(__file__).parent), check=True)
     except Exception as _e:
         print(f"  [index] Warning: could not regenerate landing page: {_e}")
 
