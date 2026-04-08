@@ -574,6 +574,30 @@ def build_updated_html(data: dict) -> str:
 <!-- ═══ End monitor agent injection ═══ -->
 """
 
+    # ── Replace hardcoded US-actor alert banner with latest timeline_event ──
+    import re as _re
+    te = data.get("timeline_event", {})
+    if te and te.get("event"):
+        te_label = te.get("date", now.strftime("%b %d")).upper()
+        te_text  = te.get("event", "")
+        # 1. Replace the tag label (e.g. "TONIGHT 9PM ET" → "APR 8")
+        html = _re.sub(
+            r'(<span class="alert-tag" style="background:rgba\(90,200,250,\.15\);color:#5ac8fa">)'
+            r'[^<]+'
+            r'(</span>)',
+            rf'\g<1>{te_label}\2',
+            html
+        )
+        # 2. Replace the alert-text span immediately following that tag
+        html = _re.sub(
+            r'(rgba\(90,200,250,\.15\);color:#5ac8fa">[^<]*</span>\s*\n\s*'
+            r'<span class="alert-text" style="color:rgba\(255,255,255,\.65\)">)'
+            r'[^<]+'
+            r'(</span>)',
+            rf'\g<1>{te_text}\2',
+            html
+        )
+
     # Inject just before </body>
     if "</body>" in html:
         html = html.replace("</body>", update_script + "\n</body>")
