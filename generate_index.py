@@ -17,7 +17,8 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace", line_buffering=True)
+if __name__ == "__main__":
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace", line_buffering=True)
 
 REPO_ROOT = Path(__file__).parent
 OUTPUT_PATH = REPO_ROOT / "index.html"
