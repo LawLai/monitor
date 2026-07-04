@@ -75,6 +75,7 @@ body {
 .card:hover::before { opacity: 1; }
 .card-election { --card-accent: #2563eb; }
 .card-conflict  { --card-accent: #ef4444; }
+.card-macro     { --card-accent: #c9962a; }
 
 .card-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 16px; }
 .card-flag img { width: 32px; height: 24px; border-radius: 3px; object-fit: cover; display: block; }
@@ -82,6 +83,7 @@ body {
 
 .card-type-badge { font-size: 9px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; padding: 3px 7px; border-radius: 4px; background: var(--blue-glow); color: #60a5fa; border: 1px solid rgba(37,99,235,0.2); }
 .card-type-badge.conflict { background: rgba(239,68,68,0.12); color: #f87171; border-color: rgba(239,68,68,0.2); }
+.card-type-badge.macro { background: rgba(201,150,42,0.12); color: #e0b558; border-color: rgba(201,150,42,0.24); }
 
 .card-title { font-size: 16px; font-weight: 700; color: #fff; line-height: 1.3; margin-bottom: 6px; }
 .card-intro { font-size: 12.5px; color: var(--muted); line-height: 1.6; margin-bottom: 16px; flex: 1; }
@@ -138,7 +140,7 @@ body {
       <div class="brand-sub">Chupe de jaiba</div>
     </div>
   </a>
-  <div class="topbar-right"><span>&#9679;</span> 3 monitors active</div>
+  <div class="topbar-right"><span>&#9679;</span> 4 monitors active</div>
 </header>
 
 <section class="hero">
@@ -150,6 +152,28 @@ body {
 <section class="grid-section">
   <div class="grid-label">Active Monitors</div>
   <div class="grid">
+
+    <a class="card card-macro" href="ll_macro.html">
+      <div class="card-header">
+        <div class="card-flag"><svg width="32" height="24" viewBox="0 0 32 24" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="12" r="9" fill="none" stroke="#c9962a" stroke-width="1.5"/><path d="M16 4.5 L18.4 12 L16 19.5 L13.6 12 Z" fill="#c9962a"/><circle cx="16" cy="12" r="1.4" fill="#0e1620" stroke="#c9962a" stroke-width="0.8"/></svg></div>
+        <span class="card-type-badge macro">Global Macro</span>
+      </div>
+      <div class="card-title">LL Macro</div>
+      <div class="card-intro">A systematic eight-desk global-macro book &mdash; the regime read, live desk positioning, and the quant + agentic engine behind every call.</div>
+      <div class="snapshot">
+        <div class="snapshot-header">
+          <span class="snapshot-label">Latest Snapshot</span>
+          <span class="status-pill pill-amber">Mildly risk-on</span>
+        </div>
+        <div class="snapshot-line">Sentiment dial <strong>63/100</strong> &nbsp;&middot;&nbsp; VIX <strong>15.8</strong></div>
+        <hr class="snapshot-divider">
+        <div class="snapshot-line">Top edge <strong>EM Sovereign Bonds</strong> &nbsp;&middot;&nbsp; Net long <strong>5</strong> desks</div>
+      </div>
+      <div class="card-footer">
+        <span class="card-updated">Updated Jul 3, 2026</span>
+        <span class="card-arrow">&rarr;</span>
+      </div>
+    </a>
 
     <a class="card card-election" href="brazil_2026_election_monitor.html">
       <div class="card-header">
