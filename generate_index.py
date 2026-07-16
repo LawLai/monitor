@@ -83,7 +83,7 @@ def load_iran_status() -> dict:
 
 
 def load_ll_macro_status() -> dict:
-    """LL Macro snapshot from the sidecar written by the fund's artifact generator
+    """TongFa Capital snapshot from the sidecar written by the fund's artifact generator
     (macro-fund/reporting/artifact_page.py -> ll_macro_status.json at the repo root)."""
     path = REPO_ROOT / "ll_macro_status.json"
     if path.exists():
@@ -169,7 +169,7 @@ def build_html(br: dict, co: dict, co_pm: dict, iran: dict, macro: dict) -> str:
     ir_cef     = iran.get("ceasefire_pct", "?")
     ir_date    = iran.get("updated", "N/A")
 
-    # ── LL Macro ──────────────────────────────────────────────────────────────
+    # ── TongFa Capital ──────────────────────────────────────────────────────────────
     m_sent = macro.get("sentiment", "N/A")
     m_dial = macro.get("dial", "?")
     m_vix  = macro.get("vix", "?")
@@ -338,7 +338,7 @@ body {{
         <div class="card-flag"><svg width="32" height="24" viewBox="0 0 32 24" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="12" r="9" fill="none" stroke="#c9962a" stroke-width="1.5"/><path d="M16 4.5 L18.4 12 L16 19.5 L13.6 12 Z" fill="#c9962a"/><circle cx="16" cy="12" r="1.4" fill="#0e1620" stroke="#c9962a" stroke-width="0.8"/></svg></div>
         <span class="card-type-badge macro">Global Macro</span>
       </div>
-      <div class="card-title">LL Macro</div>
+      <div class="card-title">TongFa Capital</div>
       <div class="card-intro">A systematic eight-desk global-macro book &mdash; the regime read, live desk positioning, and the quant + agentic engine behind every call.</div>
       <div class="snapshot">
         <div class="snapshot-header">

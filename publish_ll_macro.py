@@ -1,4 +1,4 @@
-"""Publish / refresh the LL Macro page on lawlai.github.io/monitor/.
+"""Publish / refresh the TongFa Capital page on lawlai.github.io/monitor/.
 
 Regenerates the public teaser from the fund's LATEST real dashboard output, drops it
 into this GitHub Pages repo, rebuilds the landing page, and commits + pushes — one
@@ -11,7 +11,7 @@ command. Run it whenever you want the live page to reflect the current book.
 Before running: refresh the fund output first so the dashboard artifacts are current.
 This script reads whatever is already there — it does not run the book.
 
-It stages ONLY the LL Macro files, so the repo's other untracked experiments are never
+It stages ONLY the TongFa Capital files, so the repo's other untracked experiments are never
 swept into a commit.
 """
 import json
@@ -45,7 +45,7 @@ def main() -> int:
     if not GEN.exists():
         sys.exit(f"can't find the fund generator at {GEN} — is macro-fund/ present?")
 
-    print("1. regenerating the LL Macro page from the live dashboard...")
+    print("1. regenerating the TongFa Capital page from the live dashboard...")
     run([sys.executable, GEN])
     if not ART.exists() or not STATUS.exists():
         sys.exit(f"generator did not produce {ART.name} / {STATUS.name}")
@@ -62,11 +62,11 @@ def main() -> int:
         print(f"   preview: open {REPO / 'index.html'}  and  {REPO / 'll_macro.html'}")
         return 0
 
-    print("4. committing the LL Macro files...")
+    print("4. committing the TongFa Capital files...")
     st = json.loads(STATUS.read_text(encoding="utf-8"))
     # Neutral message on purpose: commit history is public and append-only, so stance
     # detail (dial/sentiment/top desk) lives only on the overwritable page itself.
-    msg = f"LL Macro update {st.get('as_of', '?')}"
+    msg = f"TongFa Capital update {st.get('as_of', '?')}"
     run(["git", "add", "--"] + STAGE, cwd=REPO)
     committed = run(["git", "commit", "-m", msg], cwd=REPO, check=False).returncode == 0
     if not committed:
@@ -75,7 +75,7 @@ def main() -> int:
     if push:
         print("5. pushing to GitHub...")
         run(["git", "push", "origin", "main"], cwd=REPO)
-        print("\n   Live: https://lawlai.github.io/monitor/  (LL Macro card)")
+        print("\n   Live: https://lawlai.github.io/monitor/  (TongFa Capital card)")
         print("         https://lawlai.github.io/monitor/ll_macro.html")
     else:
         print("   committed locally; run `git push origin main` when ready.")
