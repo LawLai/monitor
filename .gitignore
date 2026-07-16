@@ -1,0 +1,6 @@
+macro-fund/
+__pycache__/
+*.pyc
+.claude/
+brazil-monitor/output/
+colombia-monitor/output/
