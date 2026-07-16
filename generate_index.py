@@ -1,5 +1,5 @@
 """
-generate_index.py  —  Regenerate the Agent LL's Chupe de jaiba landing page.
+generate_index.py  —  Regenerate the TongFa Capital landing page.
 
 Called automatically by each monitor's run.py and monitor_agent.py after a
 successful pipeline run, so lawlai.github.io/monitor/ always shows the latest
@@ -82,10 +82,10 @@ def load_iran_status() -> dict:
     }
 
 
-def load_ll_macro_status() -> dict:
+def load_tongfa_status() -> dict:
     """TongFa Capital snapshot from the sidecar written by the fund's artifact generator
-    (macro-fund/reporting/artifact_page.py -> ll_macro_status.json at the repo root)."""
-    path = REPO_ROOT / "ll_macro_status.json"
+    (copied by publish_tongfa.py to tongfa_capital_status.json at the repo root)."""
+    path = REPO_ROOT / "tongfa_capital_status.json"
     if path.exists():
         with open(path, encoding="utf-8") as f:
             return json.load(f)
@@ -183,7 +183,7 @@ def build_html(br: dict, co: dict, co_pm: dict, iran: dict, macro: dict) -> str:
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Agent LL's Chupe de jaiba</title>
+<title>TongFa Capital &mdash; Macro Intelligence</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after {{ box-sizing: border-box; margin: 0; padding: 0; }}
@@ -309,15 +309,15 @@ body {{
     <svg class="logo-mark" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
       <circle cx="20" cy="20" r="19" fill="#0c1a35" stroke="#c9962a" stroke-width="1.8"/>
       <circle cx="20" cy="20" r="15.5" fill="none" stroke="#c9962a" stroke-width="0.5" stroke-dasharray="2.5 2"/>
-      <text x="20" y="13.5" font-family="Inter,Arial,sans-serif" font-size="4.8" font-weight="700" fill="#c9962a" text-anchor="middle" letter-spacing="2.2">AGENT</text>
+      <text x="20" y="13.5" font-family="Inter,Arial,sans-serif" font-size="4.8" font-weight="700" fill="#c9962a" text-anchor="middle" letter-spacing="2.2">TONGFA</text>
       <circle cx="12" cy="16.5" r="0.9" fill="#c9962a"/>
       <circle cx="28" cy="16.5" r="0.9" fill="#c9962a"/>
-      <text x="20" y="27" font-family="Inter,Arial,sans-serif" font-size="13.5" font-weight="800" fill="#ffffff" text-anchor="middle">LL</text>
+      <text x="20" y="27" font-family="Inter,Arial,sans-serif" font-size="13.5" font-weight="800" fill="#ffffff" text-anchor="middle">TF</text>
       <line x1="13" y1="30" x2="27" y2="30" stroke="#c9962a" stroke-width="0.6"/>
     </svg>
     <div class="brand-text">
-      <div class="brand-name">Agent LL's</div>
-      <div class="brand-sub">Chupe de jaiba</div>
+      <div class="brand-name">TongFa Capital</div>
+      <div class="brand-sub">Macro Intelligence</div>
     </div>
   </a>
   <div class="topbar-right"><span>&#9679;</span> 4 monitors active</div>
@@ -325,7 +325,7 @@ body {{
 
 <section class="hero">
   <div class="hero-eyebrow">Intelligence Briefings</div>
-  <h1 class="hero-title">Chupe De Jaiba<br><em>made by Agent LL</em></h1>
+  <h1 class="hero-title">TongFa Capital<br><em>Macro Intelligence</em></h1>
   <p class="hero-desc">AI-powered macro event monitors &mdash; a project to leverage Agentic AI.</p>
 </section>
 
@@ -333,7 +333,7 @@ body {{
   <div class="grid-label">Active Monitors</div>
   <div class="grid">
 
-    <a class="card card-macro" href="ll_macro.html">
+    <a class="card card-macro" href="tongfa_capital.html">
       <div class="card-header">
         <div class="card-flag"><svg width="32" height="24" viewBox="0 0 32 24" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="12" r="9" fill="none" stroke="#c9962a" stroke-width="1.5"/><path d="M16 4.5 L18.4 12 L16 19.5 L13.6 12 Z" fill="#c9962a"/><circle cx="16" cy="12" r="1.4" fill="#0e1620" stroke="#c9962a" stroke-width="0.8"/></svg></div>
         <span class="card-type-badge macro">Global Macro</span>
@@ -435,7 +435,7 @@ body {{
 
 <footer class="page-footer">
   <div class="page-footer-left">
-    <strong>Agent LL's Chupe de jaiba</strong> &nbsp;&middot;&nbsp; lawlai.github.io/monitor
+    <strong>TongFa Capital</strong> &nbsp;&middot;&nbsp; lawlai.github.io/monitor
   </div>
   <div class="page-footer-right">Powered by Gemini search + Claude analysis</div>
 </footer>
@@ -451,7 +451,7 @@ def generate_index():
     colombia = load_latest_analysis("colombia-monitor")
     co_pm    = load_colombia_polymarket()
     iran     = load_iran_status()
-    macro    = load_ll_macro_status()
+    macro    = load_tongfa_status()
 
     html = build_html(brazil, colombia, co_pm, iran, macro)
     OUTPUT_PATH.write_text(html, encoding="utf-8")
