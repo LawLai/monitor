@@ -8,9 +8,8 @@ command. Run it whenever you want the live page to reflect the current book.
     python publish_ll_macro.py --no-push   # regenerate + commit, but don't push yet
     python publish_ll_macro.py --dry-run   # regenerate the files locally only, no git
 
-Before running: refresh the fund first (its daily pipeline) so the dashboard output is
-current, e.g.  cd macro-fund ;  $env:PYTHONUTF8=1 ;  python run.py --news
-This script reads whatever is already in macro-fund/output — it does not run the book.
+Before running: refresh the fund output first so the dashboard artifacts are current.
+This script reads whatever is already there — it does not run the book.
 
 It stages ONLY the LL Macro files, so the repo's other untracked experiments are never
 swept into a commit.
@@ -65,8 +64,9 @@ def main() -> int:
 
     print("4. committing the LL Macro files...")
     st = json.loads(STATUS.read_text(encoding="utf-8"))
-    msg = (f"LL Macro update {st.get('as_of', '?')} — {st.get('sentiment', '?')} / "
-           f"dial {st.get('dial', '?')} / top edge {st.get('top_desk', '?')}")
+    # Neutral message on purpose: commit history is public and append-only, so stance
+    # detail (dial/sentiment/top desk) lives only on the overwritable page itself.
+    msg = f"LL Macro update {st.get('as_of', '?')}"
     run(["git", "add", "--"] + STAGE, cwd=REPO)
     committed = run(["git", "commit", "-m", msg], cwd=REPO, check=False).returncode == 0
     if not committed:
